@@ -6,7 +6,7 @@
 
 > ℹ️ 支持所有 http(s) 网页与本地 HTML 文件（`file://`，需在扩展详情中允许“访问文件网址”）；`edge://`、扩展页、开发者工具等浏览器内部页面无法注入。
 
-![版本](https://img.shields.io/badge/version-1.1.0-blue)
+![版本](https://img.shields.io/badge/version-1.1.1-blue)
 ![平台](https://img.shields.io/badge/platform-Edge%20%2F%20Chromium-3b82f6)
 ![许可](https://img.shields.io/badge/license-MIT-green)
 
@@ -183,6 +183,9 @@ Tab 在文本框中通常用于切换焦点而不是插入字符，扩展会把 
 
 **Q9：支持哪些网站？**
 支持所有 http(s) 网页与本地 HTML 文件（`file://`，需在扩展详情中允许“访问文件网址”）；`edge://`、扩展页、开发者工具等浏览器内部页面无法注入。
+
+**Q10：弹窗显示“页面脚本未运行”或更新扩展后没反应？**
+说明页面里的内容脚本还没加载：先刷新本页（F5）；如果刚更新过扩展，请到 `edge://extensions` 点扩展的“重新加载”，然后刷新页面。
 
 ## 项目结构与开发
 

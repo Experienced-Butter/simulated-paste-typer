@@ -2,6 +2,16 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.1.1] - 2025-01-01
+
+### 修复
+
+- 修复 Edge 下整个后台服务不响应的问题：“调试”权限（可选）未授予时 `chrome.debugger` 不存在，后台在启动阶段访问 `chrome.debugger.onDetach` 抛错，导致 Service Worker 无法启动——表现为点“注入”没反应、快捷键无效。
+- 后台对 `chrome.debugger` / `chrome.commands` 的访问全部增加存在性保护，权限未授予时不再崩溃。
+- 内容脚本查询权限最多等待 3 秒，后台异常时自动按“兼容输入”继续，不会卡住。
+- 弹窗新增“页面脚本是否就绪”检测：未注入时明确提示刷新页面 / 重新加载扩展，并禁用注入按钮。
+- 弹窗内授权失败时自动打开设置页完成授权；设置页显示授权结果说明。
+
 ## [1.1.0] - 2025-01-01
 
 ### 变更
@@ -28,5 +38,6 @@
 - 零网络请求、无数据收集；
 - 打包脚本与图标生成脚本。
 
+[1.1.1]: https://github.com/your-username/simulated-paste-typer/releases/tag/v1.1.1
 [1.1.0]: https://github.com/your-username/simulated-paste-typer/releases/tag/v1.1.0
 [1.0.0]: https://github.com/your-username/simulated-paste-typer/releases/tag/v1.0.0

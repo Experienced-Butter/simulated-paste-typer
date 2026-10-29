@@ -64,7 +64,13 @@ async function testPopup() {
     storage: store.api,
     permissions: { contains: (q, cb) => setTimeout(() => cb(false), 0) },
     tabs: {
-      query: () => Promise.resolve([{ id: 9, url: 'https://example.com/page' }])
+      query: () => Promise.resolve([{ id: 9, url: 'https://example.com/page' }]),
+      // 弹窗初始化时会 ping 内容脚本，这里模拟“内容脚本已就绪”
+      sendMessage: (tabId, payload, optionsOrCb, maybeCb) => {
+        const cb = typeof optionsOrCb === 'function' ? optionsOrCb : maybeCb;
+        if (typeof cb === 'function') setTimeout(() => cb({ ok: true, top: true }), 0);
+        return undefined;
+      }
     }
   };
 
