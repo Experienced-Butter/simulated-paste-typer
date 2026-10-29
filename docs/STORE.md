@@ -124,13 +124,19 @@ network requests. No data is collected or uploaded.
 - 测试“自动输入到账号登录框”是安全的：不会提交任何表单，只在页面上按键。
 - “真实键盘模拟”会显示黄色调试提示条，属于该模式的正常行为。
 
-## 五、截图与宣传素材建议
+## 五、截图与宣传素材
 
-商店要求至少一张截图（推荐 1280×800，PNG/JPG）：
+商店要求至少一张截图，推荐 **1280×800**（PNG/JPG）。本仓库已用真实 Edge（Chromium 156）自动生成好 4 张 1280×800 截图，位于 [`store-assets/`](store-assets/)：
 
-1. 网页 + 右下角悬浮按钮；2. 倒计时状态条；3. 弹窗界面；4. 设置页。
+| 文件 | 内容 |
+| --- | --- |
+| `store-assets/01-page-countdown.png` | 网页中的悬浮按钮 + 倒计时状态条 |
+| `store-assets/02-page-done.png` | 输入完成后的页面与提示 |
+| `store-assets/03-popup.png` | 工具栏弹窗界面 |
+| `store-assets/04-options.png` | 设置页 |
 
-可另附：功能演示 GIF（≤ 10MB）。
+> 截图使用一个本地“禁止粘贴”的演示页面生成（页面文字与示例答案均为虚构内容）。
+> 可另附功能演示 GIF（≤ 10MB）。
 
 ## 六、发布检查清单
 
@@ -141,4 +147,70 @@ network requests. No data is collected or uploaded.
 - [ ] 在真实网站上完成一次“悬浮按钮 / 弹窗 / 快捷键”三种触发验证
 - [ ] `README.md`、`docs/PRIVACY.md` 链接有效
 - [ ] 权限说明文案已按上文填写
-- [ ] 截图 / 宣传图已准备
+- [ ] 截图 / 宣传图已准备（可直接使用 `store-assets/` 里的 4 张）
+
+## 七、打包与提交（操作步骤）
+
+### 1. 打包
+
+```powershell
+cd simulated-paste-typer
+pwsh ./scripts/build.ps1        # 校验 + 打包
+```
+
+输出：
+
+- `dist/simulated-paste-typer-v<版本>/` —— 本地“加载解压缩的扩展”用它；
+- `dist/simulated-paste-typer-v<版本>.zip` —— **上传商店用这个**（根目录即 `manifest.json`，已校验）；
+- `dist/SHA256SUMS.txt` —— 校验值。
+
+> 当前版本：`1.1.1`，包名 `simulated-paste-typer-v1.1.1.zip`，SHA-256 `6489D57DC3A8EF261BAA6C36DA6D40B5BDFE6546F5099A04F5E870B085131091`。
+
+### 2. 注册 Microsoft Partner Center
+
+1. 打开 <https://partner.microsoft.com/dashboard/microsoftedge/overview>；
+2. 用 Microsoft 账号登录（没有就注册一个，邮箱验证）；
+3. 同意开发者协议，进入 **Microsoft Edge 加载项** 工作区。Edge 加载项商店**不收取上架费用**。
+
+### 3. 新建项目并上传包
+
+1. 工作区里点 **“新建扩展” / “New extension”**；
+2. 填写扩展名称（可与 manifest 名不同，窗口里展示的是商店名称）；
+3. 进入项目的 **“程序包 / Packages”** 页 → **“上传新程序包”** → 选择 `dist/simulated-paste-typer-v1.1.1.zip`；
+4. 上传后确认版本号显示为 `1.1.1`、状态为“有效”。
+
+### 4. 填写商店信息（Store listing / Properties）
+
+| 字段 | 填什么 |
+| --- | --- |
+| 名称 | `模拟录入粘贴助手 - 剪贴板转键盘输入`（或 `Simulated Paste Typer`） |
+| 简短描述（≤132 字符） | `在限制粘贴的页面上，用模拟键盘输入把剪贴板文本写入光标处。` |
+| 详细描述 | 复制本文档“二、商店信息模板 → 详细描述”整段 |
+| 类别 | `Productivity`（生产力工具） |
+| 语言 | 中文（简体），可选加 English |
+| 隐私政策 URL | 见下一步 |
+| 支持/联系网址 | `https://github.com/Experienced-Butter/simulated-paste-typer/issues` |
+| 网站（可选） | `https://github.com/Experienced-Butter/simulated-paste-typer` |
+| 截图 | 上传 `store-assets/01..04` 四张 1280×800 PNG |
+
+### 5. 托管隐私政策（GitHub Pages）
+
+1. 仓库 → **Settings → Pages** → Source 选 **Deploy from a branch**；
+2. Branch 选 `master`，文件夹选 **`/docs`**，Save；
+3. 等 1–2 分钟，隐私政策地址为：
+   `https://Experienced-Butter.github.io/simulated-paste-typer/PRIVACY.md`
+4. 把这个地址填到商店的“隐私政策 URL”。（`docs/PRIVACY.md` 内容可直接当政策使用。）
+
+### 6. 提交审核
+
+- 在 **“权限 / 审核说明”** 相关字段里粘贴本文档“三、权限说明”的内容（尤其 `debugger` 为可选权限的解释）；
+- 点 **“发布” / “Submit for review”**；
+- 审核通常 1–7 个工作日，结果会发到注册邮箱；可在 Partner Center 的“事件日志”查看进度；
+- 通过后扩展会在 <https://microsoftedge.microsoft.com/addons> 上架，商店详情页地址可在项目里找到；可把该链接写进 README。
+
+### 7. 发布新版本（以后）
+
+1. 修改代码后把 `manifest.json` 的 `version` **递增**（如 `1.1.2`）；
+2. `pwsh ./scripts/build.ps1` 重新打包；
+3. Partner Center → 你的项目 → **“程序包” → “上传新程序包”** 上传新 zip → 提交更新；
+4. 商店审核通过后用户会自动收到更新。
