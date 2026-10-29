@@ -1,8 +1,10 @@
-# 超星粘贴助手 · PasteTyper
+# 模拟录入粘贴助手 · Simulated Paste Typer
 
-在 **超星学习通（i.chaoxing.com 等）** 等限制粘贴的网页上，把剪贴板里的文本**以模拟键盘输入的方式**写入当前光标处。
+在**限制粘贴的网页**上（例如超星学习通、各类在线作业 / 考试页面），把剪贴板里的文本**以模拟键盘输入的方式**写入当前光标处。
 
 > 触发 → 等待你放好光标 → 逐字符“打字”输入。全程不发送任何网络请求，剪贴板内容不落盘。
+
+> ℹ️ 当前版本仅在 `*.chaoxing.com` 域名下生效（例如 `i.chaoxing.com` 的作业 / 考试页面）；如需用于其他站点，修改 `extension/manifest.json` 中的 `matches` 与 `host_permissions` 后重新加载即可。
 
 ![版本](https://img.shields.io/badge/version-1.0.0-blue)
 ![平台](https://img.shields.io/badge/platform-Edge%20%2F%20Chromium-3b82f6)
@@ -56,10 +58,10 @@
 
 ### 方式 A：使用发布包（推荐）
 
-1. 解压 `dist/chaoxing-paste-typer-v<版本>.zip`（或直接使用 `dist/chaoxing-paste-typer-v<版本>/` 目录）；
+1. 解压 `dist/simulated-paste-typer-v<版本>.zip`（或直接使用 `dist/simulated-paste-typer-v<版本>/` 目录）；
 2. 打开 Edge，地址栏输入 `edge://extensions`；
 3. 打开左侧 / 右下角的 **“开发人员模式”**；
-4. 点击 **“加载解压缩的扩展”**，选择**包含 `manifest.json` 的那个目录**（即解压出来的 `chaoxing-paste-typer-v<版本>` 文件夹）；
+4. 点击 **“加载解压缩的扩展”**，选择**包含 `manifest.json` 的那个目录**（即解压出来的 `simulated-paste-typer-v<版本>` 文件夹）；
 5. 工具栏出现蓝色图标即安装成功（可在“扩展”菜单里把图标固定到工具栏）。
 
 > Chrome 内核相同，`chrome://extensions` 下同样可以加载。
@@ -75,8 +77,8 @@ pwsh ./scripts/build.ps1
 
 | 产物 | 用途 |
 | --- | --- |
-| `dist/chaoxing-paste-typer-v<版本>/` | 开发者模式“加载解压缩的扩展” |
-| `dist/chaoxing-paste-typer-v<版本>.zip` | Edge 加载项商店上传（zip 根目录即 `manifest.json`） |
+| `dist/simulated-paste-typer-v<版本>/` | 开发者模式“加载解压缩的扩展” |
+| `dist/simulated-paste-typer-v<版本>.zip` | Edge 加载项商店上传（zip 根目录即 `manifest.json`） |
 | `dist/SHA256SUMS.txt` | 发布时附带的校验值 |
 
 也可以**直接加载源码目录** `extension/`（它本身就是可加载的扩展目录），但商店上传请使用构建出的 ZIP。
@@ -95,7 +97,7 @@ pwsh ./scripts/build.ps1
 
 ### 方式 1：页面悬浮按钮（最省事）
 
-1. 在超星页面里，先在**目标输入框**里点一下，让光标出现；
+1. 在受支持的页面里，先在**目标输入框**里点一下，让光标出现；
 2. 点右下角的**圆形按钮**（可拖动到别处）；
 3. 等待倒计时结束，内容自动输入到光标处。
 
@@ -133,7 +135,7 @@ pwsh ./scripts/build.ps1
 | 触发后等待时间 | 3 秒 | 触发后先等这么久再输入（1–60 秒） |
 | 输入方式 | 自动 | `自动`：有调试权限用真实键盘模拟，否则用兼容输入；`真实键盘模拟`：必须授权调试权限；`兼容输入`：DOM 插入，无需额外权限 |
 | 字符间隔 | 5 毫秒 | 真实键盘模拟逐字符输入的间隔（0–200），越大越像真人打字但也更慢 |
-| 页面悬浮按钮 | 开 | 是否在超星页面显示右下角圆形按钮 |
+| 页面悬浮按钮 | 开 | 是否在受支持的页面显示右下角圆形按钮 |
 
 ## 权限与隐私
 
@@ -179,7 +181,7 @@ Tab 在文本框中通常用于切换焦点而不是插入字符，扩展会把 
 ## 项目结构与开发
 
 ```
-chaoxing-paste-typer/
+simulated-paste-typer/
 ├─ extension/                 # ← 源码即扩展本体（可直接“加载解压缩的扩展”）
 │  ├─ manifest.json           # MV3 清单
 │  ├─ background.js           # Service Worker：剪贴板/候选框架协调/CDP 键盘输入
@@ -224,7 +226,7 @@ npm test
 
 调试建议：
 
-- 内容脚本日志：在超星页面按 F12，Console 里看 `__HXPT_*` 相关输出；
+- 内容脚本日志：在页面按 F12，Console 里看 `__SPT_*` 相关输出；
 - 后台日志：`edge://extensions` → 该扩展 → “Service Worker” → 检查视图；
 - 弹窗 / 设置页：右键扩展图标 → “审查弹出内容”，或直接打开 `options.html`。
 
@@ -235,7 +237,7 @@ npm test
 本仓库已经是**初始化好的 git 仓库**（已有 `.git` 与首个提交），所以：
 
 1. 打开 GitHub Desktop → `File` → `Add local repository…`；
-2. 选择本目录 `chaoxing-paste-typer`，即可直接添加；
+2. 选择本目录 `simulated-paste-typer`，即可直接添加；
 3. 点 `Publish repository` 推到 GitHub（建议不要勾选 “Keep this code private”，或按需选择）。
 
 如果拿到的是不含 `.git` 的副本，也可以在 GitHub Desktop 里 `File → New repository` 指向该目录，或手动 `git init` 后再添加。
@@ -243,7 +245,7 @@ npm test
 ### 提交到 Microsoft Edge 加载项商店
 
 1. 打开 [Edge 加载项开发人员中心](https://partner.microsoft.com/dashboard/microsoftedge/overview) 注册并创建新项目；
-2. 上传 `dist/chaoxing-paste-typer-v<版本>.zip`（根目录含 `manifest.json`）；
+2. 上传 `dist/simulated-paste-typer-v<版本>.zip`（根目录含 `manifest.json`）；
 3. 名称、简介、详细描述、截图、隐私政策等文案模板见 [`docs/STORE.md`](docs/STORE.md)；
 4. 注意：`debugger` 属于**可选高权限**，商店审核时需在“权限说明”里解释用途（模板已写好）；
 5. 审核通过后即可发布。
@@ -257,19 +259,19 @@ npm test
 
 ## License
 
-[MIT](LICENSE) © 2025 Chaoxing PasteTyper contributors
+[MIT](LICENSE) © 2025 Simulated Paste Typer contributors
 
 ---
 
 # English Summary
 
-**Chaoxing PasteTyper** is a Microsoft Edge (Chromium) extension that types the text currently in your clipboard into the focused input field on pages that block pasting (e.g. `*.chaoxing.com` homework / quiz editors).
+**Simulated Paste Typer** is a Microsoft Edge (Chromium) extension that types the text currently in your clipboard into the focused input field on pages that block pasting (e.g. `*.chaoxing.com` homework / quiz editors).
 
 - Triggered by a floating page button, the toolbar popup, or the `Ctrl+Shift+Y` shortcut;
 - Waits a configurable delay (1–60 s), then inserts the clipboard text at the caret;
 - Two input engines: *trusted keyboard simulation* (CDP via the optional `debugger` permission, real `isTrusted` key events) and *compatibility insert* (`execCommand('insertText')`, no extra permissions);
 - No network requests, no data collection. Clipboard is read only on your action and never stored.
 
-Build: `pwsh ./scripts/build.ps1` → loads via `edge://extensions` → *Load unpacked* (`dist/chaoxing-paste-typer-v<version>/`), or upload `dist/chaoxing-paste-typer-v<version>.zip` to the Edge Add-ons store.
+Build: `pwsh ./scripts/build.ps1` → loads via `edge://extensions` → *Load unpacked* (`dist/simulated-paste-typer-v<version>/`), or upload `dist/simulated-paste-typer-v<version>.zip` to the Edge Add-ons store.
 
 See [docs/STORE.md](docs/STORE.md) for store listing templates and [docs/PRIVACY.md](docs/PRIVACY.md) for the privacy policy.

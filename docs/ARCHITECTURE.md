@@ -48,38 +48,38 @@ sequenceDiagram
     U->>C0: 点击悬浮按钮(不抢焦点)
     C0->>C0: navigator.clipboard.read() 读取剪贴板
     alt 本地读取失败
-        C0->>BG: hxpt:start
+        C0->>BG: spt:start
         BG->>O: 创建/复用离屏文档并读取剪贴板
         O-->>BG: {text}
     else 本地读取成功
-        C0->>BG: hxpt:start(text)
+        C0->>BG: spt:start(text)
     end
     BG->>BG: 读取设置(delay/mode/interval)
-    BG->>BG: 广播 hxpt:arm + 收集“候选框架”(400ms)
+    BG->>BG: 广播 spt:arm + 收集“候选框架”(400ms)
     C0-->>BG: candidate(focused/iframe/recent)
     C1-->>BG: candidate(focused)
     BG->>BG: 选分数最高的框架并记下占用
-    BG->>C0: hxpt:countdown(startAt)   ← 顶层显示倒计时
-    BG->>C1: hxpt:go(text, startAt, mode…)
+    BG->>C0: spt:countdown(startAt)   ← 顶层显示倒计时
+    BG->>C1: spt:go(text, startAt, mode…)
     C1->>C1: 等待到 startAt，再次确认光标位置
     alt mode = trusted
-        C1->>BG: hxpt:trusted-type
+        C1->>BG: spt:trusted-type
         BG->>P: attach debugger → 逐字符 Input.dispatchKeyEvent
-        BG-->>C0: hxpt:progress(done,total)
+        BG-->>C0: spt:progress(done,total)
         BG->>P: detach debugger
         BG-->>C1: {ok, chars}
     else mode = dom
         C1->>C1: execCommand('insertText')
     end
-    C1->>BG: hxpt:result(ok, message)
-    BG->>C0: hxpt:result → 收起倒计时 + 提示
+    C1->>BG: spt:result(ok, message)
+    BG->>C0: spt:result → 收起倒计时 + 提示
 ```
 
 ## 三、几个关键设计
 
 ### 1. 候选框架选择（多 iframe 支持）
 
-超星页面里输入框可能在 iframe 中。触发时后台广播 `hxpt:arm`，每个框架返回自己掌握的信息：
+页面里输入框可能在 iframe 中。触发时后台广播 `spt:arm`，每个框架返回自己掌握的信息：
 
 | 候选类型 | 分数 | 含义 |
 | --- | --- | --- |
@@ -105,28 +105,28 @@ sequenceDiagram
 ### 4. 占用与清理
 
 - `claims`：`tabId → {frameId, expiresAt}`，防止同一标签页并发触发；
-- 收到 `hxpt:result` / `hxpt:abort` / 标签页关闭 / 标签页开始导航时立即清理；
+- 收到 `spt:result` / `spt:abort` / 标签页关闭 / 标签页开始导航时立即清理；
 - `typingSessions`：CDP 输入会话，允许用户按 Esc 时中断循环。
 
 ### 5. 焦点守护
 
-CDP 输入期间每 250ms 检查 `document.activeElement`：如果焦点变成“既不是可编辑元素、也不是 iframe”的普通元素（例如搜索框、链接），主动发 `hxpt:abort` 中断，避免把内容打到错误位置。
+CDP 输入期间每 250ms 检查 `document.activeElement`：如果焦点变成“既不是可编辑元素、也不是 iframe”的普通元素（例如搜索框、链接），主动发 `spt:abort` 中断，避免把内容打到错误位置。
 
 ## 四、消息一览
 
 | 消息 | 方向 | 说明 |
 | --- | --- | --- |
-| `hxpt:ping` | 后台 → 内容 | 探活（判断内容脚本是否就绪） |
-| `hxpt:arm` | 后台 → 内容(广播) | 寻找可用框架 |
-| `hxpt:candidate` | 内容 → 后台 | 上报候选 |
-| `hxpt:countdown` | 后台 → 顶层内容 | 顶层显示倒计时 |
-| `hxpt:go` | 后台 → 执行框架 | 开始倒计时与输入 |
-| `hxpt:progress` | 后台 → 顶层内容 | CDP 输入进度 |
-| `hxpt:result` | 执行框架 → 后台 → 顶层 | 结果与提示（后台负责转发） |
-| `hxpt:abort` | 顶层/执行框架 → 后台 → 执行框架 | 中止 |
-| `hxpt:aborted` | 后台 → 顶层内容 | 收起倒计时 |
-| `hxpt:start` | 内容/弹窗 → 后台 | 统一触发入口 |
-| `hxpt:capabilities` | 内容 → 后台 | 查询是否已授权 debugger |
-| `hxpt:trusted-type` | 执行框架 → 后台 | 请求 CDP 逐字符输入 |
-| `hxpt:peek` | 弹窗 → 后台 | 读取剪贴板用于预览 |
-| `hxpt-offscreen / read` | 后台 → 离屏文档 | 读取剪贴板 |
+| `spt:ping` | 后台 → 内容 | 探活（判断内容脚本是否就绪） |
+| `spt:arm` | 后台 → 内容(广播) | 寻找可用框架 |
+| `spt:candidate` | 内容 → 后台 | 上报候选 |
+| `spt:countdown` | 后台 → 顶层内容 | 顶层显示倒计时 |
+| `spt:go` | 后台 → 执行框架 | 开始倒计时与输入 |
+| `spt:progress` | 后台 → 顶层内容 | CDP 输入进度 |
+| `spt:result` | 执行框架 → 后台 → 顶层 | 结果与提示（后台负责转发） |
+| `spt:abort` | 顶层/执行框架 → 后台 → 执行框架 | 中止 |
+| `spt:aborted` | 后台 → 顶层内容 | 收起倒计时 |
+| `spt:start` | 内容/弹窗 → 后台 | 统一触发入口 |
+| `spt:capabilities` | 内容 → 后台 | 查询是否已授权 debugger |
+| `spt:trusted-type` | 执行框架 → 后台 | 请求 CDP 逐字符输入 |
+| `spt:peek` | 弹窗 → 后台 | 读取剪贴板用于预览 |
+| `spt-offscreen / read` | 后台 → 离屏文档 | 读取剪贴板 |

@@ -1,7 +1,7 @@
 {
-  "name": "chaoxing-paste-typer-tests",
+  "name": "simulated-paste-typer-tests",
   "private": true,
-  "description": "超星粘贴助手的行为测试（jsdom + chrome 桩）：node test-*.js",
+  "description": "模拟录入粘贴助手的行为测试（jsdom + chrome 桩）：node test-*.js",
   "scripts": {
     "test": "node test-config.js && node test-content.js && node test-background.js && node test-pages.js"
   },

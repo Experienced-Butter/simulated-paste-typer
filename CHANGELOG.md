@@ -2,6 +2,12 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [Unreleased]
+
+### 变更
+
+- 项目更名为「模拟录入粘贴助手 · Simulated Paste Typer」，功能、安装方式与权限不变。
+
 ## [1.0.0] - 2025-01-01
 
 ### 新增
@@ -19,4 +25,4 @@
 - 零网络请求、无数据收集；
 - 打包脚本与图标生成脚本。
 
-[1.0.0]: https://github.com/your-username/chaoxing-paste-typer/releases/tag/v1.0.0
+[1.0.0]: https://github.com/your-username/simulated-paste-typer/releases/tag/v1.0.0

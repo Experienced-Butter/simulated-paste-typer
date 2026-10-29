@@ -1,12 +1,12 @@
 /**
- * 超星粘贴助手 · 后台 Service Worker
+ * 模拟录入粘贴助手 · 后台 Service Worker
  * ==================================================================
  * 职责：
  *  1) 读取剪贴板：MV3 的 Service Worker 没有 DOM，因此使用 chrome.offscreen
  *     创建一个离屏文档来调用 navigator.clipboard（权限来自 "clipboardRead"）；
  *  2) 协调一次注入：
  *       广播寻找可用框架 → 收集各框架的“候选”（有光标/有最近编辑位置）
- *       → 选出最合适的一个 → 下发 'hxpt:go' → 记录标签页占用 → 收尾时释放；
+ *       → 选出最合适的一个 → 下发 'spt:go' → 记录标签页占用 → 收尾时释放；
  *  3) 真实键盘模拟：chrome.debugger + CDP 的 Input.dispatchKeyEvent 派发
  *     “受信任（isTrusted）的键盘事件”，逐字符输入，并支持中断；
  *  4) 工具栏按钮、快捷键（Ctrl+Shift+Y）触发的统一入口。
@@ -21,7 +21,7 @@
 
 importScripts('shared/config.js');
 
-const CFG = self.HXPT_CONFIG || globalThis.HXPT_CONFIG;
+const CFG = self.SPT_CONFIG || globalThis.SPT_CONFIG;
 
 /* ==================================================================
  * 0. 全局状态
@@ -81,7 +81,7 @@ function sendToAllFrames(tabId, payload) {
 function tabPing(tabId) {
   return new Promise((resolve) => {
     try {
-      chrome.tabs.sendMessage(tabId, { cmd: 'hxpt:ping' }, { frameId: 0 }, (resp) => {
+      chrome.tabs.sendMessage(tabId, { cmd: 'spt:ping' }, { frameId: 0 }, (resp) => {
         const lastError = chrome.runtime.lastError;
         if (lastError || !resp || !resp.ok) resolve({ ok: false });
         else resolve({ ok: true, top: Boolean(resp.top) });
@@ -90,13 +90,13 @@ function tabPing(tabId) {
   });
 }
 
-/** 检查标签页是否是受支持的超星页面 */
+/** 检查标签页是否是受支持的页面（当前仅支持 *.chaoxing.com） */
 async function checkTab(tabId) {
   try {
     const tab = await chrome.tabs.get(tabId);
     const url = (tab && tab.url) || '';
     if (!SUPPORTED_URL.test(url)) {
-      return { ok: false, error: '当前页面不是超星页面：本扩展现仅支持 *.chaoxing.com 域名。' };
+      return { ok: false, error: '当前页面不受支持：本扩展仅支持 *.chaoxing.com 域名。' };
     }
     return { ok: true, tab: tab };
   } catch (e) {
@@ -159,7 +159,7 @@ async function ensureOffscreenDocument() {
 function requestOffscreenClipboardOnce() {
   return new Promise((resolve) => {
     try {
-      chrome.runtime.sendMessage({ target: 'hxpt-offscreen', cmd: 'read' }, (resp) => {
+      chrome.runtime.sendMessage({ target: 'spt-offscreen', cmd: 'read' }, (resp) => {
         const lastError = chrome.runtime.lastError;
         if (lastError) resolve({ ok: false, error: lastError.message || 'offscreen 无响应' });
         else resolve(resp || { ok: false, error: 'offscreen 返回为空' });
@@ -210,7 +210,7 @@ function hasActiveClaim(tabId) {
 }
 
 /**
- * 广播 'hxpt:arm' 后收集各框架上报的“候选”。
+ * 广播 'spt:arm' 后收集各框架上报的“候选”。
  * 最多等 400ms（足够本地消息往返），返回分数最高的候选。
  */
 function collectCandidates(tabId) {
@@ -357,7 +357,7 @@ async function typeTrusted(tabId, text, intervalMs) {
 
   const session = { abort: false };
   typingSessions.set(key, session);
-  sendToFrame(tabId, 0, { cmd: 'hxpt:progress', done: 0, total: text.length });
+  sendToFrame(tabId, 0, { cmd: 'spt:progress', done: 0, total: text.length });
 
   let sent = 0;
   let lastReport = Date.now();
@@ -381,11 +381,11 @@ async function typeTrusted(tabId, text, intervalMs) {
 
       if (Date.now() - lastReport >= 200) {
         lastReport = Date.now();
-        sendToFrame(tabId, 0, { cmd: 'hxpt:progress', done: sent, total: text.length });
+        sendToFrame(tabId, 0, { cmd: 'spt:progress', done: sent, total: text.length });
       }
       if (intervalMs > 0) await sleep(intervalMs);
     }
-    sendToFrame(tabId, 0, { cmd: 'hxpt:progress', done: sent, total: text.length });
+    sendToFrame(tabId, 0, { cmd: 'spt:progress', done: sent, total: text.length });
     return { ok: true, chars: sent };
   } catch (err) {
     return { ok: false, error: debuggerErrorText(err), chars: sent };
@@ -415,7 +415,7 @@ async function startInjection(source, tabId, explicitText) {
   if (!ping.ok) {
     return {
       ok: false,
-      error: '页面脚本还没就绪：请先刷新超星页面再试（仅支持 *.chaoxing.com 页面）。'
+      error: '页面脚本还没就绪：请先刷新页面再试（仅支持 *.chaoxing.com 页面）。'
     };
   }
 
@@ -444,12 +444,12 @@ async function startInjection(source, tabId, explicitText) {
 
     // 广播 → 收集候选 → 选一个框架执行
     const collection = collectCandidates(tabId);
-    sendToAllFrames(tabId, { cmd: 'hxpt:arm', charCount: text.length });
+    sendToAllFrames(tabId, { cmd: 'spt:arm', charCount: text.length });
     const chosen = await collection;
 
     if (!chosen) {
       sendToFrame(tabId, 0, {
-        cmd: 'hxpt:notice',
+        cmd: 'spt:notice',
         text: '没有找到可以输入的编辑框：请先在输入框里点一下，让光标出现，然后再触发。'
       });
       return { ok: false, error: '没有找到可输入的编辑框：请先点击输入框放置光标。' };
@@ -460,11 +460,11 @@ async function startInjection(source, tabId, explicitText) {
 
     // 由子框架执行时，让顶层框架负责显示倒计时（子框架里的 UI 太小）
     if (chosen.frameId !== 0) {
-      sendToFrame(tabId, 0, { cmd: 'hxpt:countdown', startAt: startAt, delayMs: delayMs, charCount: text.length });
+      sendToFrame(tabId, 0, { cmd: 'spt:countdown', startAt: startAt, delayMs: delayMs, charCount: text.length });
     }
 
     sendToFrame(tabId, chosen.frameId, {
-      cmd: 'hxpt:go',
+      cmd: 'spt:go',
       text: text,
       startAt: startAt,
       delayMs: delayMs,
@@ -499,7 +499,7 @@ function handleResult(msg, sender) {
   // 执行框架不是顶层时，把结果转发给顶层框架显示提示
   if (sender.frameId !== 0) {
     sendToFrame(tabId, 0, {
-      cmd: 'hxpt:result',
+      cmd: 'spt:result',
       ok: Boolean(msg.ok),
       message: msg.message || '',
       chars: Number(msg.chars) || 0,
@@ -517,11 +517,11 @@ function handleAbort(msg, sender) {
   claims.delete(tabId);
   // 通知执行框架中止
   if (claim && claim.frameId !== 0) {
-    sendToFrame(tabId, claim.frameId, { cmd: 'hxpt:abort', reason: msg.reason || 'user' });
+    sendToFrame(tabId, claim.frameId, { cmd: 'spt:abort', reason: msg.reason || 'user' });
   }
   // 如果取消是从子框架发起的，通知顶层框架收起倒计时
   if (sender.frameId !== 0) {
-    sendToFrame(tabId, 0, { cmd: 'hxpt:aborted', reason: msg.reason || 'user' });
+    sendToFrame(tabId, 0, { cmd: 'spt:aborted', reason: msg.reason || 'user' });
   }
 }
 
@@ -532,7 +532,7 @@ function handleAbort(msg, sender) {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!msg || typeof msg !== 'object') return;
   const cmd = msg.cmd;
-  if (typeof cmd !== 'string' || cmd.indexOf('hxpt:') !== 0) return;
+  if (typeof cmd !== 'string' || cmd.indexOf('spt:') !== 0) return;
 
   const tabId = sender.tab && sender.tab.id;
   const frameId = typeof sender.frameId === 'number' ? sender.frameId : 0;
@@ -550,24 +550,24 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   };
 
   switch (cmd) {
-    case 'hxpt:start':
+    case 'spt:start':
       return call(async () => {
         const targetTabId = typeof msg.tabId === 'number' && msg.tabId > 0 ? msg.tabId : tabId;
         return startInjection(msg.source || 'unknown', targetTabId, msg.text);
       });
 
-    case 'hxpt:candidate':
+    case 'spt:candidate':
       if (tabId) recordCandidate(tabId, frameId, msg);
       return call(async () => ({ ok: true }));
 
-    case 'hxpt:capabilities':
+    case 'spt:capabilities':
       return call(async () => ({
         ok: true,
         trusted: await hasPermission('debugger'),
         version: chrome.runtime.getManifest().version
       }));
 
-    case 'hxpt:trusted-type':
+    case 'spt:trusted-type':
       return call(async () => {
         if (!tabId) return { ok: false, error: '缺少目标标签页' };
         const text = CFG.normalizeNewlines(msg.text || '');
@@ -576,15 +576,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         return typeTrusted(tabId, text, intervalMs);
       });
 
-    case 'hxpt:result':
+    case 'spt:result':
       handleResult(msg, sender);
       return call(async () => ({ ok: true }));
 
-    case 'hxpt:abort':
+    case 'spt:abort':
       handleAbort(msg, sender);
       return call(async () => ({ ok: true }));
 
-    case 'hxpt:peek':
+    case 'spt:peek':
       return call(async () => {
         const clip = await readClipboard();
         if (!clip.ok) return { ok: false, error: clip.error };
@@ -608,7 +608,7 @@ chrome.commands.onCommand.addListener((command) => {
       const tab = tabs && tabs[0];
       if (!tab || typeof tab.id !== 'number') return;
       const res = await startInjection('hotkey', tab.id);
-      if (!res.ok) sendToFrame(tab.id, 0, { cmd: 'hxpt:notice', text: res.error });
+      if (!res.ok) sendToFrame(tab.id, 0, { cmd: 'spt:notice', text: res.error });
     } catch (e) { /* 忽略：例如当前窗口不是普通网页 */ }
   })();
 });

@@ -17,7 +17,7 @@ const sandbox = { console, setTimeout, clearTimeout, DOMParser: dom.window.DOMPa
 const context = vm.createContext(sandbox);
 vm.runInContext('var self = globalThis;', context);
 vm.runInContext(configSrc, context);
-const CFG = sandbox.HXPT_CONFIG;
+const CFG = sandbox.SPT_CONFIG;
 
 let failures = 0;
 function check(name, cond, extra) {

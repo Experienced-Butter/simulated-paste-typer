@@ -4,7 +4,7 @@
 
 ## 一、上传包
 
-- 使用 `dist/chaoxing-paste-typer-v<版本>.zip`；
+- 使用 `dist/simulated-paste-typer-v<版本>.zip`；
 - ZIP **根目录**必须包含 `manifest.json`（构建脚本已保证）；
 - 建议同时上传/附带 `dist/SHA256SUMS.txt` 的 SHA256 值（可选）。
 
@@ -12,20 +12,20 @@
 
 ### 名称（Name）
 
-- 中文：`超星粘贴助手 - 剪贴板转键盘输入`
-- English：`Chaoxing PasteTyper - Clipboard to Keyboard`
+- 中文：`模拟录入粘贴助手 - 剪贴板转键盘输入`
+- English：`Simulated Paste Typer - Clipboard to Keyboard`
 
 ### 简短描述（Short description，≤132 字符）
 
-- 中文：`在超星学习通等限制粘贴的页面上，用模拟键盘输入把剪贴板文本写入光标处。`
-- English：`Types clipboard text at the caret with trusted keyboard events on paste-restricted Chaoxing pages.`
+- 中文：`在限制粘贴的页面上，用模拟键盘输入把剪贴板文本写入光标处。`
+- English：`Types clipboard text at the caret with trusted keyboard events on paste-restricted pages.`
 
 ### 详细描述（Description）
 
 ```
 【中文】
 
-超星粘贴助手（PasteTyper）解决“页面禁止粘贴”的场景：部分在线作业、考试与讨论页面会拦截
+模拟录入粘贴助手（Simulated Paste Typer）解决“页面禁止粘贴”的场景：部分在线作业、考试与讨论页面会拦截
 Ctrl+V 与右键粘贴，但不会拦截真正的键盘输入。
 
 本扩展做的事情：
@@ -50,7 +50,7 @@ Ctrl+V 与右键粘贴，但不会拦截真正的键盘输入。
 
 【English】
 
-Chaoxing PasteTyper fills paste-restricted web pages by typing clipboard text as
+Simulated Paste Typer fills paste-restricted web pages by typing clipboard text as
 keyboard input. Trigger it with the floating page button, the toolbar popup, or
 Ctrl+Shift+Y; it waits a configurable delay and then types the last clipboard
 text into the focused field using trusted keyboard events (or a DOM fallback).
@@ -97,7 +97,7 @@ network requests. No data is collected or uploaded.
 
 ### host_permissions: https://*.chaoxing.com/*
 
-> 仅在超星学习通域名下注入内容脚本，提供悬浮按钮与输入逻辑。
+> 仅在 *.chaoxing.com 域名下注入内容脚本，提供悬浮按钮与输入逻辑。
 
 ### debugger（可选权限，默认不授予）
 

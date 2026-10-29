@@ -1,5 +1,5 @@
 /**
- * 超星粘贴助手 · 共享配置与工具
+ * 模拟录入粘贴助手 · 共享配置与工具
  * ------------------------------------------------------------------
  * 本文件会被以下四个环境同时加载：
  *   1. 内容脚本（content script）
@@ -170,7 +170,7 @@
     return '';
   }
 
-  g.HXPT_CONFIG = {
+  g.SPT_CONFIG = {
     DEFAULTS: DEFAULTS,
     LIMITS: LIMITS,
     MODES: MODES,

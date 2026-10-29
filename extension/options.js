@@ -1,5 +1,5 @@
 /**
- * 超星粘贴助手 · 设置页逻辑
+ * 模拟录入粘贴助手 · 设置页逻辑
  * ==================================================================
  * - 读写 chrome.storage.sync（与弹窗、后台共享同一份设置）；
  * - 数值输入统一夹紧到合法范围；
@@ -8,7 +8,7 @@
 'use strict';
 
 (function () {
-  const CFG = window.HXPT_CONFIG;
+  const CFG = window.SPT_CONFIG;
   const $ = (id) => document.getElementById(id);
 
   let settings = null;
@@ -151,6 +151,6 @@
   }
 
   init().catch((err) => {
-    console.error('[HXPT] 设置页初始化失败', err);
+    console.error('[SPT] 设置页初始化失败', err);
   });
 })();

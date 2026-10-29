@@ -1,11 +1,11 @@
 /**
- * 超星粘贴助手 · 离屏文档脚本
+ * 模拟录入粘贴助手 · 离屏文档脚本
  * ==================================================================
  * MV3 的 Service Worker 没有 DOM、也不能直接访问剪贴板，
  * 所以后台通过 chrome.offscreen 创建一个这个页面来读取剪贴板。
  *
  * 只响应来自后台的消息：
- *   { target: 'hxpt-offscreen', cmd: 'read' }
+ *   { target: 'spt-offscreen', cmd: 'read' }
  * 回复：
  *   { ok: true, text }           读取成功（text 可能是空字符串）
  *   { ok: false, error }         读取失败（权限/激活/接口不可用）
@@ -15,10 +15,10 @@
 'use strict';
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  if (!msg || msg.target !== 'hxpt-offscreen' || msg.cmd !== 'read') return;
+  if (!msg || msg.target !== 'spt-offscreen' || msg.cmd !== 'read') return;
 
   (async () => {
-    const CFG = self.HXPT_CONFIG;
+    const CFG = self.SPT_CONFIG;
     try {
       let text = '';
 

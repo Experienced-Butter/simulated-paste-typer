@@ -1,5 +1,5 @@
 /**
- * 超星粘贴助手 · 内容脚本（Content Script）
+ * 模拟录入粘贴助手 · 内容脚本（Content Script）
  * ==================================================================
  * 运行在 *.chaoxing.com 的每个框架里（含子框架），负责：
  *
@@ -23,10 +23,10 @@
   /* ------------------------------------------------------------------
    * 0. 基础守卫与运行状态
    * ------------------------------------------------------------------ */
-  const CFG = globalThis.HXPT_CONFIG;
+  const CFG = globalThis.SPT_CONFIG;
   if (!CFG) return;                              // 共享配置未加载（理论上不会发生）
-  if (globalThis.__HXPT_CONTENT__) return;        // 防止重复注入
-  globalThis.__HXPT_CONTENT__ = true;
+  if (globalThis.__SPT_CONTENT__) return;        // 防止重复注入
+  globalThis.__SPT_CONTENT__ = true;
 
   const state = {
     settings: CFG.normalize(CFG.DEFAULTS), // 当前设置（后台在触发时会重新读取）
@@ -220,7 +220,7 @@
     :host { all: initial; }
     *, *::before, *::after { box-sizing: border-box; }
 
-    .hxpt-fab {
+    .spt-fab {
       position: fixed;
       right: 18px;
       bottom: 96px;
@@ -240,16 +240,16 @@
       touch-action: none;
       z-index: 1;
     }
-    .hxpt-fab:hover { transform: scale(1.06); opacity: 1; }
-    .hxpt-fab:active { transform: scale(.97); }
-    .hxpt-fab[hidden] { display: none !important; }
-    .hxpt-fab.busy { animation: hxpt-pulse 1.2s ease-in-out infinite; }
-    @keyframes hxpt-pulse {
+    .spt-fab:hover { transform: scale(1.06); opacity: 1; }
+    .spt-fab:active { transform: scale(.97); }
+    .spt-fab[hidden] { display: none !important; }
+    .spt-fab.busy { animation: spt-pulse 1.2s ease-in-out infinite; }
+    @keyframes spt-pulse {
       0%, 100% { box-shadow: 0 6px 18px rgba(139, 92, 246, .5); }
       50% { box-shadow: 0 6px 30px rgba(139, 92, 246, .95); }
     }
 
-    .hxpt-overlay {
+    .spt-overlay {
       position: fixed;
       left: 50%;
       bottom: 28px;
@@ -267,8 +267,8 @@
       pointer-events: auto;
       z-index: 2;
     }
-    .hxpt-overlay[hidden] { display: none !important; }
-    .hxpt-overlay .hxpt-text {
+    .spt-overlay[hidden] { display: none !important; }
+    .spt-overlay .spt-text {
       flex: 0 1 auto;
       min-width: 0;
       white-space: nowrap;
@@ -276,7 +276,7 @@
       text-overflow: ellipsis;
       font-variant-numeric: tabular-nums;
     }
-    .hxpt-overlay button {
+    .spt-overlay button {
       flex: none;
       border: 1px solid rgba(248, 250, 252, .3);
       background: transparent;
@@ -287,9 +287,9 @@
       font-size: 12px;
       font-family: inherit;
     }
-    .hxpt-overlay button:hover { background: rgba(248, 250, 252, .12); }
+    .spt-overlay button:hover { background: rgba(248, 250, 252, .12); }
 
-    .hxpt-toast {
+    .spt-toast {
       position: fixed;
       left: 50%;
       bottom: 88px;
@@ -306,11 +306,11 @@
       transition: opacity .18s ease;
       z-index: 3;
     }
-    .hxpt-toast[hidden] { display: none !important; }
-    .hxpt-toast.show { opacity: 1; }
-    .hxpt-toast.ok { background: rgba(6, 78, 59, .96); }
-    .hxpt-toast.err { background: rgba(127, 29, 29, .96); }
-    .hxpt-toast.muted { background: rgba(51, 65, 85, .96); }
+    .spt-toast[hidden] { display: none !important; }
+    .spt-toast.show { opacity: 1; }
+    .spt-toast.ok { background: rgba(6, 78, 59, .96); }
+    .spt-toast.err { background: rgba(127, 29, 29, .96); }
+    .spt-toast.muted { background: rgba(51, 65, 85, .96); }
   `;
 
   const FAB_ICON_SVG = `
@@ -333,7 +333,7 @@
       return;
     }
     const host = document.createElement('div');
-    host.id = '__hxpt_host__';
+    host.id = '__spt_host__';
     // pointer-events: none 让这一层不挡页面操作，只有里面的按钮自己可点
     host.style.cssText = [
       'all: initial',
@@ -367,17 +367,17 @@
 
     const fab = document.createElement('button');
     fab.type = 'button';
-    fab.className = 'hxpt-fab';
-    fab.title = '超星粘贴助手：点击后等待几秒，把剪贴板内容以键盘输入方式写入光标处（可拖动）';
-    fab.setAttribute('aria-label', '超星粘贴助手');
+    fab.className = 'spt-fab';
+    fab.title = '模拟录入粘贴助手：点击后等待几秒，把剪贴板内容以键盘输入方式写入光标处（可拖动）';
+    fab.setAttribute('aria-label', '模拟录入粘贴助手');
     fab.innerHTML = FAB_ICON_SVG;
     fab.hidden = true;
 
     const overlay = document.createElement('div');
-    overlay.className = 'hxpt-overlay';
+    overlay.className = 'spt-overlay';
     overlay.hidden = true;
     const overlayText = document.createElement('span');
-    overlayText.className = 'hxpt-text';
+    overlayText.className = 'spt-text';
     const overlayBtn = document.createElement('button');
     overlayBtn.type = 'button';
     overlayBtn.textContent = '取消 (Esc)';
@@ -385,7 +385,7 @@
     overlay.appendChild(overlayBtn);
 
     const toastEl = document.createElement('div');
-    toastEl.className = 'hxpt-toast';
+    toastEl.className = 'spt-toast';
     toastEl.hidden = true;
 
     shadow.appendChild(fab);
@@ -512,11 +512,11 @@
     if (!ui.toast) return;
     const el = ui.toast;
     el.textContent = String(text || '');
-    el.className = 'hxpt-toast show' + (kind ? ' ' + kind : '');
+    el.className = 'spt-toast show' + (kind ? ' ' + kind : '');
     el.hidden = false;
     if (ui.toastTimer) clearTimeout(ui.toastTimer);
     ui.toastTimer = setTimeout(() => {
-      el.className = 'hxpt-toast';
+      el.className = 'spt-toast';
       ui.toastTimer = null;
     }, 3200);
   }
@@ -669,11 +669,11 @@
     return Math.min(15 * 60 * 1000, Math.max(20000, run.text.length * perChar + 30000));
   }
 
-  /** 收到后台的 'hxpt:go'：启动倒计时 → 到点执行输入（只有被选中的框架会收到） */
+  /** 收到后台的 'spt:go'：启动倒计时 → 到点执行输入（只有被选中的框架会收到） */
   function beginRun(msg) {
     if (state.activeRun) {
       // 理论上不会发生（后台保证同一标签页只有一个任务），兜底释放占用
-      sendBg({ cmd: 'hxpt:result', ok: false, message: '上一次输入尚未结束', chars: 0, aborted: false });
+      sendBg({ cmd: 'spt:result', ok: false, message: '上一次输入尚未结束', chars: 0, aborted: false });
       return;
     }
     if (isTopFrame()) buildUi();
@@ -682,7 +682,7 @@
     const startAt = Number(msg.startAt) || (Date.now() + (Number.isFinite(delay) ? delay : 0));
     const text = CFG.normalizeNewlines(msg.text || '');
     if (!text) {
-      sendBg({ cmd: 'hxpt:result', ok: false, message: '没有可输入的文本', chars: 0, aborted: false });
+      sendBg({ cmd: 'spt:result', ok: false, message: '没有可输入的文本', chars: 0, aborted: false });
       return;
     }
     const run = {
@@ -712,7 +712,7 @@
   async function executeTyping(run) {
     if (state.activeRun !== run || run.cancelled) return;
     try {
-      const caps = await sendBg({ cmd: 'hxpt:capabilities' });
+      const caps = await sendBg({ cmd: 'spt:capabilities' });
       const trustedGranted = Boolean(caps && caps.ok && caps.trusted);
       const mode = resolveMode(run.mode, trustedGranted);
 
@@ -757,7 +757,7 @@
         let res;
         try {
           res = await sendBg(
-            { cmd: 'hxpt:trusted-type', text: run.text, intervalMs: run.intervalMs },
+            { cmd: 'spt:trusted-type', text: run.text, intervalMs: run.intervalMs },
             typingTimeout(run)
           );
         } finally {
@@ -807,7 +807,7 @@
       if (active === null || active === document.body) return; // 窗口暂时失焦等情况不判为异常
       // 焦点落到了无关元素上：主动中止
       if (state.activeRun === run) {
-        sendBg({ cmd: 'hxpt:abort', reason: 'focus-lost' });
+        sendBg({ cmd: 'spt:abort', reason: 'focus-lost' });
       }
     }, 250);
     return timer;
@@ -832,7 +832,7 @@
     }
     setBusyUi(false);
     sendBg({
-      cmd: 'hxpt:result',
+      cmd: 'spt:result',
       ok: Boolean(info && info.ok),
       message: (info && info.message) || '',
       chars: (info && info.chars) || 0,
@@ -852,7 +852,7 @@
       toast('已取消本次输入', 'muted');
     }
     setBusyUi(false);
-    if (reason !== 'remote') sendBg({ cmd: 'hxpt:abort', reason: reason || 'user' });
+    if (reason !== 'remote') sendBg({ cmd: 'spt:abort', reason: reason || 'user' });
   }
 
   /** 顶层框架里点击“取消/中止”按钮时的统一入口 */
@@ -860,7 +860,7 @@
     if (state.activeRun) { cancelActiveRun('user'); return; }
     hideOverlay();
     toast('已取消本次输入', 'muted');
-    sendBg({ cmd: 'hxpt:abort', reason: 'user' });
+    sendBg({ cmd: 'spt:abort', reason: 'user' });
   }
 
   /** Esc 键：倒计时或输入中可用 */
@@ -905,7 +905,7 @@
     setBusyUi(true);
     toast('正在读取剪贴板…');
 
-    const payload = { cmd: 'hxpt:start', source: 'fab' };
+    const payload = { cmd: 'spt:start', source: 'fab' };
     try {
       const local = await readClipboardLocal();
       if (local && local.ok) {
@@ -944,7 +944,7 @@
       return; // 什么也没有，不参与竞争
     }
     sendBg({
-      cmd: 'hxpt:candidate',
+      cmd: 'spt:candidate',
       focused: info.focused,
       iframe: info.iframe,
       recent: info.recent
@@ -954,45 +954,45 @@
   chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (!msg || typeof msg !== 'object') return;
     const cmd = msg.cmd;
-    if (typeof cmd !== 'string' || cmd.indexOf('hxpt:') !== 0) return;
+    if (typeof cmd !== 'string' || cmd.indexOf('spt:') !== 0) return;
 
     switch (cmd) {
-      case 'hxpt:ping':
+      case 'spt:ping':
         sendResponse({ ok: true, top: isTopFrame() });
         return false;
-      case 'hxpt:arm':
+      case 'spt:arm':
         handleArm();
         return false;
-      case 'hxpt:go':
+      case 'spt:go':
         beginRun(msg);
         return false;
-      case 'hxpt:countdown':
+      case 'spt:countdown':
         // 由别的框架执行输入时，顶层框架负责显示倒计时
         if (isTopFrame()) {
           buildUi();
           showCountdown(Number(msg.startAt) || Date.now(), Number(msg.charCount) || 0);
         }
         return false;
-      case 'hxpt:progress':
+      case 'spt:progress':
         setProgress(msg.done, msg.total);
         return false;
-      case 'hxpt:result':
+      case 'spt:result':
         if (isTopFrame()) {
           hideOverlay();
           if (msg.message) toast(msg.message, msg.ok ? 'ok' : (msg.aborted ? 'muted' : 'err'));
         }
         return false;
-      case 'hxpt:notice':
+      case 'spt:notice':
         if (isTopFrame()) {
           buildUi();
           toast(msg.text || '', 'err');
         }
         return false;
-      case 'hxpt:abort':
+      case 'spt:abort':
         // 后台要求中止（用户点了取消按钮 / 其他框架发起取消）
         cancelActiveRun('remote');
         return false;
-      case 'hxpt:aborted':
+      case 'spt:aborted':
         if (isTopFrame()) {
           const wasVisible = ui.overlayActive;
           hideOverlay();

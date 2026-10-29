@@ -1,5 +1,5 @@
 /**
- * 超星粘贴助手 · 工具栏弹窗逻辑
+ * 模拟录入粘贴助手 · 工具栏弹窗逻辑
  * ==================================================================
  * 弹窗提供：
  *   - 当前页面是否受支持的状态提示；
@@ -14,7 +14,7 @@
 'use strict';
 
 (function () {
-  const CFG = window.HXPT_CONFIG;
+  const CFG = window.SPT_CONFIG;
   const $ = (id) => document.getElementById(id);
 
   const SUPPORTED_URL = /^https?:\/\/([^/]+\.)?chaoxing\.com(\/|$)/i;
@@ -130,10 +130,10 @@
     const statusText = $('statusText');
     if (supported) {
       statusRow.classList.add('ok');
-      statusText.textContent = '已连接超星页面，可以开始';
+      statusText.textContent = '已连接受支持的页面，可以开始';
     } else {
       statusRow.classList.add('err');
-      statusText.textContent = '当前不是超星页面（仅支持 *.chaoxing.com）';
+      statusText.textContent = '当前页面不受支持（仅支持 *.chaoxing.com）';
     }
     setBusyState(false);
 
@@ -229,7 +229,7 @@
       const local = await readClipboardLocal();
       if (local && local.ok) { setPreview(local.text); return; }
 
-      const resp = await sendBg({ cmd: 'hxpt:peek' });
+      const resp = await sendBg({ cmd: 'spt:peek' });
       if (resp && resp.ok) { setPreview(resp.text); return; }
       if (!silent) {
         setPreview('（未读取）');
@@ -247,14 +247,14 @@
   async function inject() {
     if (busy) return;
     if (!supported) {
-      setFeedback('当前页面不是超星页面，无法注入。仅支持 *.chaoxing.com。', 'err');
+      setFeedback('当前页面不受支持，无法注入。仅支持 *.chaoxing.com。', 'err');
       return;
     }
     setFeedback('');
     setBusyState(true, '正在读取剪贴板…');
 
     try {
-      const payload = { cmd: 'hxpt:start', tabId: activeTab.id, source: 'popup' };
+      const payload = { cmd: 'spt:start', tabId: activeTab.id, source: 'popup' };
       const local = await readClipboardLocal();
       if (local && local.ok) payload.text = local.text; // 优先用弹窗读到的内容
 

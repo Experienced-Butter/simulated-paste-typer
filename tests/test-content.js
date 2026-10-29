@@ -110,7 +110,7 @@ function lastSent(cmd) {
   await sleep(80); // 等待 init() 读完设置
 
   const ta = doc.getElementById('ta');
-  const host = doc.getElementById('__hxpt_host__');
+  const host = doc.getElementById('__spt_host__');
   check('Shadow UI host 已创建', !!host);
 
   // 1. 有焦点 → 上报 candidate focused
@@ -118,17 +118,17 @@ function lastSent(cmd) {
   ta.dispatchEvent(new window.FocusEvent('focusin', { bubbles: true }));
   ta.setSelectionRange(0, 0);
   ta.dispatchEvent(new window.Event('selectionchange', { bubbles: true }));
-  bgMsg({ cmd: 'hxpt:arm' });
+  bgMsg({ cmd: 'spt:arm' });
   await sleep(30);
-  let cand = lastSent('hxpt:candidate');
+  let cand = lastSent('spt:candidate');
   check('arm → candidate(focused)', !!cand && cand.focused === true, cand);
 
   // 2. DOM 模式输入（delay 很短）
-  responses['hxpt:capabilities'] = () => ({ ok: true, trusted: false });
-  responses['hxpt:result'] = () => ({ ok: true });
+  responses['spt:capabilities'] = () => ({ ok: true, trusted: false });
+  responses['spt:result'] = () => ({ ok: true });
   inputEvents.length = 0;
   bgMsg({
-    cmd: 'hxpt:go',
+    cmd: 'spt:go',
     text: 'Hello\nWorld',
     startAt: Date.now() + 80,
     delayMs: 80,
@@ -139,18 +139,18 @@ function lastSent(cmd) {
   await sleep(400);
   check('DOM 模式写入 textarea', ta.value === 'Hello\nWorld', ta.value);
   check('DOM 模式触发了 input 事件', inputEvents.length === 1, inputEvents);
-  const domResult = lastSent('hxpt:result');
+  const domResult = lastSent('spt:result');
   check('DOM 模式上报 result(ok)', !!domResult && domResult.ok === true, domResult);
 
   // 3. trusted 模式：走后台 CDP
-  responses['hxpt:capabilities'] = () => ({ ok: true, trusted: true });
-  responses['hxpt:trusted-type'] = () => ({ ok: true, chars: 5 });
+  responses['spt:capabilities'] = () => ({ ok: true, trusted: true });
+  responses['spt:trusted-type'] = () => ({ ok: true, chars: 5 });
   ta.value = '';
   ta.focus();
-  bgMsg({ cmd: 'hxpt:arm' });
+  bgMsg({ cmd: 'spt:arm' });
   await sleep(30);
   bgMsg({
-    cmd: 'hxpt:go',
+    cmd: 'spt:go',
     text: 'abcdef',
     startAt: Date.now() + 60,
     delayMs: 60,
@@ -159,17 +159,17 @@ function lastSent(cmd) {
     charCount: 6
   });
   await sleep(300);
-  const trustedCall = lastSent('hxpt:trusted-type');
+  const trustedCall = lastSent('spt:trusted-type');
   check('trusted 模式请求后台 CDP 输入', !!trustedCall && trustedCall.text === 'abcdef', trustedCall);
   check('trusted 模式不会写 DOM', ta.value === '', JSON.stringify(ta.value));
 
   // 4. 取消：倒计时期间 abort，不应触发输入
-  const before = sent.filter((m) => m.cmd === 'hxpt:trusted-type').length;
+  const before = sent.filter((m) => m.cmd === 'spt:trusted-type').length;
   ta.focus();
-  bgMsg({ cmd: 'hxpt:arm' });
+  bgMsg({ cmd: 'spt:arm' });
   await sleep(30);
   bgMsg({
-    cmd: 'hxpt:go',
+    cmd: 'spt:go',
     text: 'should-not-type',
     startAt: Date.now() + 300,
     delayMs: 300,
@@ -178,24 +178,24 @@ function lastSent(cmd) {
     charCount: 15
   });
   await sleep(60);
-  bgMsg({ cmd: 'hxpt:abort' });
+  bgMsg({ cmd: 'spt:abort' });
   await sleep(400);
-  const after = sent.filter((m) => m.cmd === 'hxpt:trusted-type').length;
+  const after = sent.filter((m) => m.cmd === 'spt:trusted-type').length;
   check('取消后不再输入', after === before, { before, after });
 
   // 5. 焦点离开输入框后，仍会以 recent 候选参与竞争（用于“先放光标、再点弹窗”的场景）
   doc.activeElement && doc.activeElement.blur && doc.activeElement.blur();
   ta.blur();
   doc.body.focus && doc.body.focus();
-  bgMsg({ cmd: 'hxpt:arm' });
+  bgMsg({ cmd: 'spt:arm' });
   await sleep(30);
-  const recentCand = lastSent('hxpt:candidate');
+  const recentCand = lastSent('spt:candidate');
   check('失去焦点后上报 recent 候选', !!recentCand && recentCand.focused === false && recentCand.recent === true, recentCand);
 
   // 6. 空文本 go → 立即 result(ok:false)
-  bgMsg({ cmd: 'hxpt:go', text: '', startAt: Date.now(), mode: 'dom', intervalMs: 0 });
+  bgMsg({ cmd: 'spt:go', text: '', startAt: Date.now(), mode: 'dom', intervalMs: 0 });
   await sleep(30);
-  const emptyRes = sent.filter((m) => m.cmd === 'hxpt:result').pop();
+  const emptyRes = sent.filter((m) => m.cmd === 'spt:result').pop();
   check('空文本立即失败', !!emptyRes && emptyRes.ok === false, emptyRes);
 
   console.log(failures === 0 ? '\nALL CONTENT TESTS PASSED' : `\n${failures} CONTENT TEST(S) FAILED`);

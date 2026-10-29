@@ -54,8 +54,8 @@ async function testPopup() {
       sendMessage: (payload, cb) => {
         sent.push(payload);
         setTimeout(() => {
-          if (payload.cmd === 'hxpt:peek') { cb({ ok: true, text: '预览文本' }); return; }
-          if (payload.cmd === 'hxpt:start') { cb({ ok: true, delayMs: 3000, charCount: 7 }); return; }
+          if (payload.cmd === 'spt:peek') { cb({ ok: true, text: '预览文本' }); return; }
+          if (payload.cmd === 'spt:start') { cb({ ok: true, delayMs: 3000, charCount: 7 }); return; }
           cb({ ok: true });
         }, 0);
       },
@@ -83,7 +83,7 @@ async function testPopup() {
 
   const doc = window.document;
   check('显示版本号', doc.getElementById('versionLabel').textContent === 'v1.0.0');
-  check('识别超星页面', doc.getElementById('statusText').textContent.indexOf('已连接超星页面') >= 0, doc.getElementById('statusText').textContent);
+  check('识别受支持页面', doc.getElementById('statusText').textContent.indexOf('已连接受支持的页面') >= 0, doc.getElementById('statusText').textContent);
   check('等待时间下拉框有选项', doc.getElementById('delaySelect').options.length > 3);
   check('输入方式下拉框有 3 项', doc.getElementById('modeSelect').options.length === 3);
   check('剪贴板预览已填充', (doc.getElementById('clipPreview').textContent || '').indexOf('从剪贴板来的文本') >= 0);
@@ -92,8 +92,8 @@ async function testPopup() {
   // 点击注入按钮
   doc.getElementById('injectBtn').click();
   await sleep(120);
-  const startMsg = sent.filter((m) => m.cmd === 'hxpt:start').pop();
-  check('点击注入发送 hxpt:start', !!startMsg && startMsg.tabId === 9, startMsg);
+  const startMsg = sent.filter((m) => m.cmd === 'spt:start').pop();
+  check('点击注入发送 spt:start', !!startMsg && startMsg.tabId === 9, startMsg);
   check('优先使用弹窗本地读到的文本', !!startMsg && startMsg.text === '从剪贴板来的文本', startMsg && startMsg.text);
   check('显示成功反馈', (doc.getElementById('feedback').textContent || '').indexOf('已开始') >= 0);
 

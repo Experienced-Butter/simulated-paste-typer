@@ -1,11 +1,11 @@
 ﻿<#
 .SYNOPSIS
-    构建并打包“超星粘贴助手”扩展。
+    构建并打包“模拟录入粘贴助手”扩展。
 
 .DESCRIPTION
     输出到 dist/：
-      dist/chaoxing-paste-typer-v<版本>/      ← 可直接在 Edge/Chrome 里“加载解压缩的扩展”
-      dist/chaoxing-paste-typer-v<版本>.zip   ← 可直接用于 Edge 加载项商店上传（zip 根目录含 manifest.json）
+      dist/simulated-paste-typer-v<版本>/      ← 可直接在 Edge/Chrome 里“加载解压缩的扩展”
+      dist/simulated-paste-typer-v<版本>.zip   ← 可直接用于 Edge 加载项商店上传（zip 根目录含 manifest.json）
       dist/SHA256SUMS.txt                     ← 压缩包校验值（发布时附在 GitHub Release 里）
 
     构建时会先做基础校验：
@@ -27,7 +27,7 @@ $root = Split-Path -Parent $PSScriptRoot
 $extDir = Join-Path $root 'extension'
 $distDir = Join-Path $root 'dist'
 
-Write-Host '== 超星粘贴助手 · 构建开始 ==' -ForegroundColor Cyan
+Write-Host '== 模拟录入粘贴助手 · 构建开始 ==' -ForegroundColor Cyan
 
 # ---------- 1. 解析并校验 manifest ----------
 $manifestPath = Join-Path $extDir 'manifest.json'
@@ -85,7 +85,7 @@ if ($node) {
 }
 
 # ---------- 4. 复制到 dist/<名称>-v<版本> ----------
-$pkgName = 'chaoxing-paste-typer'
+$pkgName = 'simulated-paste-typer'
 $stageName = '{0}-v{1}' -f $pkgName, $pkgVersion
 $stageDir = Join-Path $distDir $stageName
 $zipPath = Join-Path $distDir ('{0}.zip' -f $stageName)

@@ -1,7 +1,7 @@
 ﻿/**
  * 后台 Service Worker 行为测试（Node + vm + chrome 桩）
  * 运行：node test-background.js
- * 覆盖：读剪贴板、候选评分、go 下发、结果转发、trusted 输入循环、取消、非超星页拦截。
+ * 覆盖：读剪贴板、候选评分、go 下发、结果转发、trusted 输入循环、取消、非受支持页拦截。
  */
 'use strict';
 
@@ -51,13 +51,13 @@ function tabSendMessage(tabId, payload, optionsOrCb, maybeCb) {
 
   state.tabMessages.push({ tabId, frameId, payload });
 
-  if (payload && payload.cmd === 'hxpt:ping') {
+  if (payload && payload.cmd === 'spt:ping') {
     const resp = state.pingOk ? { ok: true, top: frameId === 0 } : undefined;
     if (cb) { setTimeout(() => cb(resp), 0); return undefined; }
     return state.pingOk ? Promise.resolve(resp) : Promise.reject(new Error('no receiver'));
   }
 
-  if (payload && payload.cmd === 'hxpt:arm' && typeof state.onArm === 'function') {
+  if (payload && payload.cmd === 'spt:arm' && typeof state.onArm === 'function') {
     setTimeout(() => state.onArm(tabId), 20);
   }
 
@@ -72,7 +72,7 @@ const chrome = {
     onInstalled: { addListener: () => {} },
     getManifest: () => ({ version: '1.0.0' }),
     sendMessage: (payload, cb) => {
-      if (payload && payload.target === 'hxpt-offscreen') {
+      if (payload && payload.target === 'spt-offscreen') {
         state.offscreenReads += 1;
         setTimeout(() => cb({ ok: true, text: state.clipboardText }), 0);
         return;
@@ -160,69 +160,69 @@ function lastTabMessage(cmd) {
   // 1. 普通流程：hotkey 触发 → 读剪贴板 → 候选 → go
   state.onArm = (tabId) => {
     state.messageListeners[0](
-      { cmd: 'hxpt:candidate', focused: true, iframe: false, recent: false },
+      { cmd: 'spt:candidate', focused: true, iframe: false, recent: false },
       { tab: { id: tabId }, frameId: 2 },
       () => {}
     );
   };
-  let res = await callBg({ cmd: 'hxpt:start', source: 'hotkey' });
+  let res = await callBg({ cmd: 'spt:start', source: 'hotkey' });
   check('start 成功', !!res && res.ok === true && res.frameId === 2, res);
   check('走了离屏文档读剪贴板', state.offscreenReads > 0);
-  const go = lastTabMessage('hxpt:go');
+  const go = lastTabMessage('spt:go');
   check('向执行框架下发 go（frame 2）', !!go && go.frameId === 2 && go.payload.text === state.clipboardText, go && { frameId: go.frameId, cmd: go.payload.cmd });
-  const countdown = lastTabMessage('hxpt:countdown');
+  const countdown = lastTabMessage('spt:countdown');
   check('向顶层下发 countdown（frame 0）', !!countdown && countdown.frameId === 0);
 
   // 2. 结果转发 + 占用释放
   state.messageListeners[0](
-    { cmd: 'hxpt:result', ok: true, message: 'ok', chars: 10 },
+    { cmd: 'spt:result', ok: true, message: 'ok', chars: 10 },
     { tab: { id: 5 }, frameId: 2 },
     () => {}
   );
   await sleep(30);
-  const relay = lastTabMessage('hxpt:result');
+  const relay = lastTabMessage('spt:result');
   check('结果转发到顶层（frame 0）', !!relay && relay.frameId === 0);
 
   state.onArm = (tabId) => {
     state.messageListeners[0](
-      { cmd: 'hxpt:candidate', focused: true, iframe: false, recent: false },
+      { cmd: 'spt:candidate', focused: true, iframe: false, recent: false },
       { tab: { id: tabId }, frameId: 2 },
       () => {}
     );
   };
-  res = await callBg({ cmd: 'hxpt:start', source: 'hotkey' });
+  res = await callBg({ cmd: 'spt:start', source: 'hotkey' });
   check('上一次完成后可以再次 start（占用已释放）', !!res && res.ok === true, res);
-  state.messageListeners[0]({ cmd: 'hxpt:result', ok: true, message: 'ok', chars: 10 }, { tab: { id: 5 }, frameId: 2 }, () => {});
+  state.messageListeners[0]({ cmd: 'spt:result', ok: true, message: 'ok', chars: 10 }, { tab: { id: 5 }, frameId: 2 }, () => {});
   await sleep(30);
 
   // 3. 候选评分：focused 优先于 recent
   state.tabMessages.length = 0;
   state.onArm = (tabId) => {
-    state.messageListeners[0]({ cmd: 'hxpt:candidate', recent: true }, { tab: { id: tabId }, frameId: 1 }, () => {});
-    state.messageListeners[0]({ cmd: 'hxpt:candidate', focused: true }, { tab: { id: tabId }, frameId: 3 }, () => {});
+    state.messageListeners[0]({ cmd: 'spt:candidate', recent: true }, { tab: { id: tabId }, frameId: 1 }, () => {});
+    state.messageListeners[0]({ cmd: 'spt:candidate', focused: true }, { tab: { id: tabId }, frameId: 3 }, () => {});
   };
-  res = await callBg({ cmd: 'hxpt:start', source: 'hotkey' });
+  res = await callBg({ cmd: 'spt:start', source: 'hotkey' });
   check('优先选择 focused 框架', !!res && res.frameId === 3, res);
-  state.messageListeners[0]({ cmd: 'hxpt:result', ok: true }, { tab: { id: 5 }, frameId: 3 }, () => {});
+  state.messageListeners[0]({ cmd: 'spt:result', ok: true }, { tab: { id: 5 }, frameId: 3 }, () => {});
   await sleep(30);
 
   // 4. 无候选 → 顶层提示
   state.tabMessages.length = 0;
   state.onArm = null;
-  res = await callBg({ cmd: 'hxpt:start', source: 'hotkey' });
+  res = await callBg({ cmd: 'spt:start', source: 'hotkey' });
   check('无候选时返回失败', !!res && res.ok === false, res);
-  const notice = lastTabMessage('hxpt:notice');
+  const notice = lastTabMessage('spt:notice');
   check('无候选时顶层显示提示', !!notice && notice.frameId === 0);
 
-  // 5. 非超星页面拦截
+  // 5. 非受支持页面拦截
   state.tabUrl = 'https://example.com/';
-  res = await callBg({ cmd: 'hxpt:start', source: 'hotkey' });
-  check('非超星页面被拦截', !!res && res.ok === false && /超星/.test(res.error || ''), res);
+  res = await callBg({ cmd: 'spt:start', source: 'hotkey' });
+  check('非受支持页面被拦截', !!res && res.ok === false && /不受支持/.test(res.error || ''), res);
   state.tabUrl = 'https://i.chaoxing.com/work';
 
   // 6. trusted-type：权限未授予 → fallback
   state.debuggerGranted = false;
-  let tr = await callBg({ cmd: 'hxpt:trusted-type', text: 'abc', intervalMs: 0 }, { tab: { id: 5 }, frameId: 2 });
+  let tr = await callBg({ cmd: 'spt:trusted-type', text: 'abc', intervalMs: 0 }, { tab: { id: 5 }, frameId: 2 });
   check('未授权时返回 fallback', !!tr && tr.ok === false && tr.fallback === true, tr);
 
   // 7. trusted-type：逐字符输入（含回车与制表符）
@@ -230,25 +230,25 @@ function lastTabMessage(cmd) {
   state.attachCalls = 0;
   state.detachCalls = 0;
   state.debuggerCommands.length = 0;
-  tr = await callBg({ cmd: 'hxpt:trusted-type', text: 'A\nB\tC', intervalMs: 0 }, { tab: { id: 5 }, frameId: 2 });
+  tr = await callBg({ cmd: 'spt:trusted-type', text: 'A\nB\tC', intervalMs: 0 }, { tab: { id: 5 }, frameId: 2 });
   check('trusted 输入成功，字符数正确', !!tr && tr.ok === true && tr.chars === 5, tr); // 7 = A \n B 4空格 C
   const methods = state.debuggerCommands.map((c) => c.method);
   check('attach / detach 各一次', state.attachCalls === 1 && state.detachCalls === 1, { attach: state.attachCalls, detach: state.detachCalls });
   const charTexts = state.debuggerCommands.filter((c) => c.params.type === 'char').map((c) => c.params.text);
   check('char 序列 = A, \\r, B, 4空格, C', JSON.stringify(charTexts) === JSON.stringify(['A', '\r', 'B', '    ', 'C']), charTexts);
   check('Enter 用 rawKeyDown + keyUp', methods.filter((m) => m === 'Input.dispatchKeyEvent').length >= 6, methods);
-  const lastProgress = lastTabMessage('hxpt:progress');
+  const lastProgress = lastTabMessage('spt:progress');
   check('有进度上报', !!lastProgress && lastProgress.payload.total === 5);
 
   // 8. 输入中取消
   state.debuggerGranted = true;
   state.debuggerCommands.length = 0;
   const typingPromise = callBg(
-    { cmd: 'hxpt:trusted-type', text: 'X'.repeat(120), intervalMs: 5 },
+    { cmd: 'spt:trusted-type', text: 'X'.repeat(120), intervalMs: 5 },
     { tab: { id: 5 }, frameId: 2 }
   );
   await sleep(120);
-  state.messageListeners[0]({ cmd: 'hxpt:abort', reason: 'user' }, { tab: { id: 5 }, frameId: 0 }, () => {});
+  state.messageListeners[0]({ cmd: 'spt:abort', reason: 'user' }, { tab: { id: 5 }, frameId: 0 }, () => {});
   tr = await typingPromise;
   check('取消后输入中止', !!tr && tr.ok === false && tr.aborted === true && tr.chars < 120, tr);
   await sleep(100);
@@ -257,18 +257,18 @@ function lastTabMessage(cmd) {
   state.tabMessages.length = 0;
   const readsBefore = state.offscreenReads;
   state.onArm = (tabId) => {
-    state.messageListeners[0]({ cmd: 'hxpt:candidate', focused: true }, { tab: { id: tabId }, frameId: 0 }, () => {});
+    state.messageListeners[0]({ cmd: 'spt:candidate', focused: true }, { tab: { id: tabId }, frameId: 0 }, () => {});
   };
-  res = await callBg({ cmd: 'hxpt:start', source: 'popup', text: '直接传入的文本' });
+  res = await callBg({ cmd: 'spt:start', source: 'popup', text: '直接传入的文本' });
   check('弹窗显式文本生效', !!res && res.ok === true, res);
   check('显式文本时不读离屏剪贴板', state.offscreenReads === readsBefore);
-  const go2 = lastTabMessage('hxpt:go');
+  const go2 = lastTabMessage('spt:go');
   check('go 下发的是弹窗传入的文本', !!go2 && go2.payload.text === '直接传入的文本', go2 && go2.payload.text);
-  state.messageListeners[0]({ cmd: 'hxpt:result', ok: true }, { tab: { id: 5 }, frameId: 0 }, () => {});
+  state.messageListeners[0]({ cmd: 'spt:result', ok: true }, { tab: { id: 5 }, frameId: 0 }, () => {});
   await sleep(30);
 
   // 10. 空文本 → 失败
-  res = await callBg({ cmd: 'hxpt:start', source: 'popup', text: '' });
+  res = await callBg({ cmd: 'spt:start', source: 'popup', text: '' });
   check('空文本返回失败', !!res && res.ok === false, res);
 
   console.log(failures === 0 ? '\nALL BACKGROUND TESTS PASSED' : `\n${failures} BACKGROUND TEST(S) FAILED`);

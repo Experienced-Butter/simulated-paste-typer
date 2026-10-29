@@ -36,13 +36,13 @@ jobs:
       - name: Upload extension ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: chaoxing-paste-typer-zip
+          name: simulated-paste-typer-zip
           path: dist/*.zip
           if-no-files-found: error
 
       - name: Upload checksums
         uses: actions/upload-artifact@v4
         with:
-          name: chaoxing-paste-typer-sha256
+          name: simulated-paste-typer-sha256
           path: dist/SHA256SUMS.txt
           if-no-files-found: warn

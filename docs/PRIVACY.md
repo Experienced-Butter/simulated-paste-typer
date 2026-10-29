@@ -1,6 +1,6 @@
 # 隐私说明 · Privacy Policy
 
-**扩展名称：** 超星粘贴助手 · PasteTyper
+**扩展名称：** 模拟录入粘贴助手 · Simulated Paste Typer
 **适用版本：** 1.0.0 及以后
 **最后更新：** 2025-01-01
 
@@ -36,7 +36,7 @@
 | `clipboardRead` | 必需 | 读取剪贴板文本 |
 | `storage` | 必需 | 保存设置 |
 | `offscreen` | 必需 | 在后台读取剪贴板（MV3 后台没有 DOM） |
-| `host_permissions: https://*.chaoxing.com/*` | 必需 | 只在超星域名下注入悬浮按钮与输入逻辑 |
+| `host_permissions: https://*.chaoxing.com/*` | 必需 | 只在 *.chaoxing.com 域名下注入悬浮按钮与输入逻辑 |
 | `debugger` | **可选** | 只有在用户主动授权并选择“真实键盘模拟”后，才用于向当前标签页派发可信键盘事件；不授权时完全不会使用 |
 
 ## 联系方式
