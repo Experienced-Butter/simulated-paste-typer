@@ -55,6 +55,14 @@
     });
   }
 
+  function showPermHint(text) {
+    const el = $('permHint');
+    if (!el) return;
+    if (!text) { el.hidden = true; el.textContent = ''; return; }
+    el.hidden = false;
+    el.textContent = text;
+  }
+
   async function refreshPermission() {
     const badge = $('permStatus');
     const granted = await permissionsContains();
@@ -78,10 +86,14 @@
         });
       });
       await refreshPermission();
-      if (!granted) {
-        // 用户拒绝时不打扰，只在状态里体现
+      if (granted) {
+        showPermHint('已授权。之后“真实键盘模拟”模式会通过浏览器调试接口派发可信键盘事件；输入期间页面顶部会出现黄色调试提示条，输入结束自动消失。');
+      } else {
+        showPermHint('浏览器没有确认授权：请再点一次“授权调试权限”，并在弹出的确认框中点“允许”。若从不弹框，请确认扩展是通过 edge://extensions 的“加载解压缩的扩展”安装的，并尝试重启浏览器。');
       }
-    } catch (e) { /* 忽略 */ }
+    } catch (e) {
+      showPermHint('授权失败：' + ((e && e.message) || e));
+    }
   }
 
   async function removePermission() {
@@ -92,8 +104,8 @@
           resolve(Boolean(value));
         });
       });
+      showPermHint('已移除授权，“真实键盘模拟”将不可用（自动回退为兼容输入）。');
       await refreshPermission();
-      // 移除权限后，若输入方式仍是“真实键盘模拟”之外的自动，则无需改设置
     } catch (e) { /* 忽略 */ }
   }
 

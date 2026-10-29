@@ -712,7 +712,8 @@
   async function executeTyping(run) {
     if (state.activeRun !== run || run.cancelled) return;
     try {
-      const caps = await sendBg({ cmd: 'spt:capabilities' });
+      // 后台短暂异常时不要卡住输入：查询权限最多等 3 秒，超时按“未授权”处理
+      const caps = await sendBg({ cmd: 'spt:capabilities' }, 3000);
       const trustedGranted = Boolean(caps && caps.ok && caps.trusted);
       const mode = resolveMode(run.mode, trustedGranted);
 

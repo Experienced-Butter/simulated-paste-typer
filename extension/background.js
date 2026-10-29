@@ -255,6 +255,10 @@ function pickBestCandidate(items) {
 
 function attachDebugger(tabId) {
   return new Promise((resolve, reject) => {
+    if (!chrome.debugger || typeof chrome.debugger.attach !== 'function') {
+      reject(new Error('缺少“调试”权限：请在扩展设置页授权“真实键盘模拟”后再试。'));
+      return;
+    }
     try {
       chrome.debugger.attach({ tabId: tabId }, '1.3', () => {
         const lastError = chrome.runtime.lastError;
@@ -267,6 +271,7 @@ function attachDebugger(tabId) {
 
 function detachDebugger(tabId) {
   return new Promise((resolve) => {
+    if (!chrome.debugger || typeof chrome.debugger.detach !== 'function') { resolve(); return; }
     try {
       chrome.debugger.detach({ tabId: tabId }, () => {
         void chrome.runtime.lastError;
@@ -278,6 +283,10 @@ function detachDebugger(tabId) {
 
 function debuggerCommand(tabId, method, params) {
   return new Promise((resolve, reject) => {
+    if (!chrome.debugger || typeof chrome.debugger.sendCommand !== 'function') {
+      reject(new Error('缺少“调试”权限：请在扩展设置页授权“真实键盘模拟”后再试。'));
+      return;
+    }
     try {
       chrome.debugger.sendCommand({ tabId: tabId }, method, params, (result) => {
         const lastError = chrome.runtime.lastError;
@@ -598,20 +607,30 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
 /* ==================================================================
  * 7. 事件：快捷键、安装初始化、标签页清理、调试会话断开
+ * ------------------------------------------------------------------
+ * 注意（重要）：
+ *   chrome.commands 只有在清单里声明了 commands 时才存在；
+ *   chrome.debugger 只有在“调试”权限（这里为可选权限）被授予后才存在。
+ *   在没有这些 API 时直接访问其属性（如 chrome.debugger.onDetach）
+ *   会抛 TypeError，导致整个 Service Worker 启动失败。因此统一做存在性保护。
  * ================================================================== */
 
-chrome.commands.onCommand.addListener((command) => {
-  if (command !== 'trigger-inject') return;
-  (async () => {
-    try {
-      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-      const tab = tabs && tabs[0];
-      if (!tab || typeof tab.id !== 'number') return;
-      const res = await startInjection('hotkey', tab.id);
-      if (!res.ok) sendToFrame(tab.id, 0, { cmd: 'spt:notice', text: res.error });
-    } catch (e) { /* 忽略：例如当前窗口不是普通网页 */ }
-  })();
-});
+try {
+  if (chrome.commands && chrome.commands.onCommand) {
+    chrome.commands.onCommand.addListener((command) => {
+      if (command !== 'trigger-inject') return;
+      (async () => {
+        try {
+          const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+          const tab = tabs && tabs[0];
+          if (!tab || typeof tab.id !== 'number') return;
+          const res = await startInjection('hotkey', tab.id);
+          if (!res.ok) sendToFrame(tab.id, 0, { cmd: 'spt:notice', text: res.error });
+        } catch (e) { /* 忽略：例如当前窗口不是普通网页 */ }
+      })();
+    });
+  }
+} catch (e) { /* 没有 commands 声明时忽略 */ }
 
 chrome.runtime.onInstalled.addListener(() => {
   (async () => {
@@ -644,8 +663,12 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 });
 
 // 用户在黄色提示条上点了“取消”，或者页面被关闭/开发者工具接管
-chrome.debugger.onDetach.addListener((source) => {
-  if (!source || typeof source.tabId !== 'number') return;
-  const session = typingSessions.get(String(source.tabId));
-  if (session) session.abort = true;
-});
+try {
+  if (chrome.debugger && chrome.debugger.onDetach) {
+    chrome.debugger.onDetach.addListener((source) => {
+      if (!source || typeof source.tabId !== 'number') return;
+      const session = typingSessions.get(String(source.tabId));
+      if (session) session.abort = true;
+    });
+  }
+} catch (e) { /* “调试”权限未授予时不可用，忽略 */ }

@@ -22,6 +22,7 @@
 
   let activeTab = null;
   let supported = false;
+  let contentReady = false;
   let busy = false;
 
   /* ---------------- 基础工具 ---------------- */
@@ -107,7 +108,7 @@
     busy = Boolean(value);
     const btn = $('injectBtn');
     if (!btn) return;
-    btn.disabled = busy || !supported;
+    btn.disabled = busy || !supported || !contentReady;
     btn.textContent = busy ? (label || '处理中…') : '读取剪贴板并输入到光标处';
   }
 
@@ -126,14 +127,34 @@
     }
     supported = Boolean(activeTab && SUPPORTED_URL.test(activeTab.url || ''));
 
+    // 探测页面里的内容脚本是否就绪：没就绪通常说明页面需要刷新，
+    // 或者扩展刚更新过还没在 edge://extensions 里“重新加载”。
+    contentReady = false;
+    if (supported) {
+      contentReady = await Promise.race([
+        new Promise((resolve) => {
+          try {
+            chrome.tabs.sendMessage(activeTab.id, { cmd: 'spt:ping' }, { frameId: 0 }, (resp) => {
+              void chrome.runtime.lastError;
+              resolve(Boolean(resp && resp.ok));
+            });
+          } catch (e) { resolve(false); }
+        }),
+        new Promise((resolve) => setTimeout(() => resolve(false), 3000))
+      ]);
+    }
+
     const statusRow = $('statusRow');
     const statusText = $('statusText');
-    if (supported) {
-      statusRow.classList.add('ok');
-      statusText.textContent = '已连接受支持的页面，可以开始';
-    } else {
+    if (!supported) {
       statusRow.classList.add('err');
       statusText.textContent = '当前页面不受支持（浏览器内部页面无法注入）';
+    } else if (!contentReady) {
+      statusRow.classList.add('err');
+      statusText.textContent = '页面脚本未运行：请刷新本页（F5）；若刚更新过扩展，请到 edge://extensions 点“重新加载”后再刷新页面。';
+    } else {
+      statusRow.classList.add('ok');
+      statusText.textContent = '已连接受支持的页面，可以开始';
     }
     setBusyState(false);
 
@@ -207,8 +228,14 @@
           resolve(Boolean(value));
         });
       });
-      if (granted) setFeedback('已授权“调试”权限：之后将使用真实键盘事件输入（页面会出现黄色调试提示条，属正常现象）。', 'ok');
-      else setFeedback('未获得“调试”权限，将继续使用兼容输入方式。', '');
+      if (granted) {
+        setFeedback('已授权“调试”权限：之后将使用真实键盘事件输入（页面会出现黄色调试提示条，属正常现象）。', 'ok');
+      } else {
+        // 弹窗里发起权限请求时，浏览器弹出确认框会让弹窗失焦/关闭，请求可能因此被取消。
+        // 改为打开设置页（普通标签页）再授权，成功率更高。
+        try { chrome.runtime.openOptionsPage(); } catch (e) { /* 忽略 */ }
+        setFeedback('未获得“调试”权限（弹窗在浏览器确认框出现时可能被关闭）。已打开设置页，请在那里点击“授权调试权限”并点“允许”。', 'err');
+      }
     } catch (e) {
       setFeedback('授权失败：' + ((e && e.message) || e), 'err');
     }
@@ -248,6 +275,10 @@
     if (busy) return;
     if (!supported) {
       setFeedback('当前页面不受支持，无法注入。请打开普通网页（http/https）或本地 HTML 文件（需允许访问文件网址）。', 'err');
+      return;
+    }
+    if (!contentReady) {
+      setFeedback('页面脚本还没就绪：请刷新本页（F5）后重试；若是本地文件页，请在扩展详情中允许“访问文件网址”。', 'err');
       return;
     }
     setFeedback('');
