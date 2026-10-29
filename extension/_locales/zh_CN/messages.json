@@ -1,0 +1,8 @@
+{
+  "extensionName": {
+    "message": "模拟录入粘贴助手 · Simulated Paste Typer"
+  },
+  "extensionDescription": {
+    "message": "在限制粘贴的网页上，把剪贴板文本以模拟键盘输入的方式写入当前光标处。"
+  }
+}
