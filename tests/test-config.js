@@ -11,7 +11,7 @@ const { JSDOM } = require('jsdom');
 
 const configSrc = fs.readFileSync(path.join(__dirname, '..', 'extension', 'shared', 'config.js'), 'utf8');
 
-const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'https://i.chaoxing.com/' });
+const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'https://example.com/' });
 
 const sandbox = { console, setTimeout, clearTimeout, DOMParser: dom.window.DOMParser, Node: dom.window.Node };
 const context = vm.createContext(sandbox);

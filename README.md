@@ -1,12 +1,12 @@
 # 模拟录入粘贴助手 · Simulated Paste Typer
 
-在**限制粘贴的网页**上（例如超星学习通、各类在线作业 / 考试页面），把剪贴板里的文本**以模拟键盘输入的方式**写入当前光标处。
+在**限制粘贴的网页**上（例如部分在线作业、考试、问卷、在线文档等会拦截粘贴的页面），把剪贴板里的文本**以模拟键盘输入的方式**写入当前光标处。
 
 > 触发 → 等待你放好光标 → 逐字符“打字”输入。全程不发送任何网络请求，剪贴板内容不落盘。
 
-> ℹ️ 当前版本仅在 `*.chaoxing.com` 域名下生效（例如 `i.chaoxing.com` 的作业 / 考试页面）；如需用于其他站点，修改 `extension/manifest.json` 中的 `matches` 与 `host_permissions` 后重新加载即可。
+> ℹ️ 支持所有 http(s) 网页与本地 HTML 文件（`file://`，需在扩展详情中允许“访问文件网址”）；`edge://`、扩展页、开发者工具等浏览器内部页面无法注入。
 
-![版本](https://img.shields.io/badge/version-1.0.0-blue)
+![版本](https://img.shields.io/badge/version-1.1.0-blue)
 ![平台](https://img.shields.io/badge/platform-Edge%20%2F%20Chromium-3b82f6)
 ![许可](https://img.shields.io/badge/license-MIT-green)
 
@@ -52,6 +52,7 @@
 - ✋ **随时取消**：倒计时与输入过程中按 `Esc` 或点“中止”即可停止
 - 🧩 **框架友好**：支持输入框位于 iframe 内的页面（自动选择正确的框架执行）
 - 🎨 **轻量 UI**：所有界面放在 Shadow DOM 内，不污染页面样式，也不被页面样式污染
+- 🌐 **通用**：支持所有 http(s) 网页与本地 HTML 文件（`file://` 需在扩展详情中允许“访问文件网址”），浏览器内部页面除外
 - 🔒 **零网络请求**：没有统计、没有上报、没有远程代码
 
 ## 安装（Edge 开发者模式）
@@ -65,6 +66,8 @@
 5. 工具栏出现蓝色图标即安装成功（可在“扩展”菜单里把图标固定到工具栏）。
 
 > Chrome 内核相同，`chrome://extensions` 下同样可以加载。
+
+> ⚠️ 安装时 Edge 会提示扩展可“读取并更改你在所有网站上的数据”，这是因为扩展需要在任意网页上提供悬浮按钮与输入能力；扩展没有任何网络请求，剪贴板也只在你主动触发时读取一次。
 
 ### 方式 B：从源码构建
 
@@ -145,7 +148,7 @@ pwsh ./scripts/build.ps1
 | `storage` | 保存设置（chrome.storage.sync，浏览器自带同步） |
 | `offscreen` | MV3 后台没有 DOM，用离屏文档读取剪贴板 |
 | `debugger`（**可选**） | 仅在启用“真实键盘模拟”时请求；用于向当前标签页派发受信任键盘事件 |
-| `host_permissions: https://*.chaoxing.com/*` | 只在该域名下注入内容脚本和悬浮按钮 |
+| `host_permissions: http(s)://*/*、file:///*` | 在所有网页与本地文件页注入内容脚本和悬浮按钮（安装时“读取并更改所有网站上的数据”的提示即来自这里） |
 
 - **没有网络请求**：扩展代码中不存在 `fetch` / `XMLHttpRequest` / 远程脚本；
 - **不收集数据**：不读取浏览历史、不读取页面内容、不上传剪贴板；
@@ -177,6 +180,9 @@ Tab 在文本框中通常用于切换焦点而不是插入字符，扩展会把 
 
 **Q8：会不会把内容打到别的地方？**
 输入前会检查“光标是否还在可编辑元素上”，输入中每 250ms 检查一次，焦点被切走就立即中止。但仍建议先放好光标再触发。
+
+**Q9：支持哪些网站？**
+支持所有 http(s) 网页与本地 HTML 文件（`file://`，需在扩展详情中允许“访问文件网址”）；`edge://`、扩展页、开发者工具等浏览器内部页面无法注入。
 
 ## 项目结构与开发
 
@@ -254,7 +260,7 @@ npm test
 
 ## 免责声明
 
-- 本项目仅用于**你自己有权输入的内容**；请遵守所在学校、考试纪律与超星平台的服务条款；
+- 本项目仅用于**你自己有权输入的内容**；请遵守所在学校 / 单位与目标网站的规则；
 - 使用本扩展产生的一切后果由使用者自行承担。
 
 ## License
@@ -265,7 +271,7 @@ npm test
 
 # English Summary
 
-**Simulated Paste Typer** is a Microsoft Edge (Chromium) extension that types the text currently in your clipboard into the focused input field on pages that block pasting (e.g. `*.chaoxing.com` homework / quiz editors).
+**Simulated Paste Typer** is a Microsoft Edge (Chromium) extension that types the text currently in your clipboard into the focused input field on pages that block pasting (e.g. homework / quiz / form pages with paste handlers). It works on any http(s) page and local HTML files.
 
 - Triggered by a floating page button, the toolbar popup, or the `Ctrl+Shift+Y` shortcut;
 - Waits a configurable delay (1–60 s), then inserts the clipboard text at the caret;

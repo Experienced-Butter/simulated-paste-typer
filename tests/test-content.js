@@ -27,7 +27,7 @@ const dom = new JSDOM(
      <input id="inp">
      <div id="ce" contenteditable="true"></div>
    </body></html>`,
-  { url: 'https://i.chaoxing.com/work', runScripts: 'outside-only', pretendToBeVisual: true }
+  { url: 'https://example.com/page', runScripts: 'outside-only', pretendToBeVisual: true }
 );
 const { window } = dom;
 const doc = window.document;

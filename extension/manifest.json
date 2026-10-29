@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "模拟录入粘贴助手 · Simulated Paste Typer",
   "short_name": "粘贴助手",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "在限制粘贴的网页上，把剪贴板文本以模拟键盘输入的方式写入当前光标处。",
   "minimum_chrome_version": "116",
   "icons": {
@@ -36,12 +36,16 @@
     "debugger"
   ],
   "host_permissions": [
-    "https://*.chaoxing.com/*"
+    "http://*/*",
+    "https://*/*",
+    "file:///*"
   ],
   "content_scripts": [
     {
       "matches": [
-        "https://*.chaoxing.com/*"
+        "http://*/*",
+        "https://*/*",
+        "file:///*"
       ],
       "js": [
         "shared/config.js",

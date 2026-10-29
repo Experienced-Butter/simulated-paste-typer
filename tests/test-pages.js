@@ -64,7 +64,7 @@ async function testPopup() {
     storage: store.api,
     permissions: { contains: (q, cb) => setTimeout(() => cb(false), 0) },
     tabs: {
-      query: () => Promise.resolve([{ id: 9, url: 'https://i.chaoxing.com/work' }])
+      query: () => Promise.resolve([{ id: 9, url: 'https://example.com/page' }])
     }
   };
 

@@ -17,7 +17,7 @@
   const CFG = window.SPT_CONFIG;
   const $ = (id) => document.getElementById(id);
 
-  const SUPPORTED_URL = /^https?:\/\/([^/]+\.)?chaoxing\.com(\/|$)/i;
+  const SUPPORTED_URL = /^(https?|file):\/\//i;
   const PREVIEW_LIMIT = 320;
 
   let activeTab = null;
@@ -133,7 +133,7 @@
       statusText.textContent = '已连接受支持的页面，可以开始';
     } else {
       statusRow.classList.add('err');
-      statusText.textContent = '当前页面不受支持（仅支持 *.chaoxing.com）';
+      statusText.textContent = '当前页面不受支持（浏览器内部页面无法注入）';
     }
     setBusyState(false);
 
@@ -247,7 +247,7 @@
   async function inject() {
     if (busy) return;
     if (!supported) {
-      setFeedback('当前页面不受支持，无法注入。仅支持 *.chaoxing.com。', 'err');
+      setFeedback('当前页面不受支持，无法注入。请打开普通网页（http/https）或本地 HTML 文件（需允许访问文件网址）。', 'err');
       return;
     }
     setFeedback('');

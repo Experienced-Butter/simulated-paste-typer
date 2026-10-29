@@ -2,11 +2,14 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## [Unreleased]
+## [1.1.0] - 2025-01-01
 
 ### 变更
 
-- 项目更名为「模拟录入粘贴助手 · Simulated Paste Typer」，功能、安装方式与权限不变。
+- 项目更名为「模拟录入粘贴助手 · Simulated Paste Typer」。
+- 解除站点限制：支持所有 http(s) 网页与本地 HTML 文件（`file://`，需在扩展详情中允许“访问文件网址”）；`edge://`、扩展页、开发者工具等浏览器内部页面除外。
+- “受支持页面”改为按协议判定；悬浮按钮、弹窗与后台文案同步去站点化。
+- 因权限范围扩大到所有网站，安装时会提示“读取并更改你在所有网站上的数据”；扩展只在用户触发时读取剪贴板并输入，没有任何网络请求。
 
 ## [1.0.0] - 2025-01-01
 
@@ -25,4 +28,5 @@
 - 零网络请求、无数据收集；
 - 打包脚本与图标生成脚本。
 
+[1.1.0]: https://github.com/your-username/simulated-paste-typer/releases/tag/v1.1.0
 [1.0.0]: https://github.com/your-username/simulated-paste-typer/releases/tag/v1.0.0

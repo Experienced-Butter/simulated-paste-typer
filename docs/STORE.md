@@ -41,6 +41,7 @@ Ctrl+V 与右键粘贴，但不会拦截真正的键盘输入。
 • 光标保护：输入前再次确认光标位置；输入中焦点被切走会自动中止
 • 倒计时 / 进度提示，随时按 Esc 取消
 • 支持 iframe 内的编辑器
+• 适用于所有 http(s) 网页与本地 HTML 文件（file:// 需允许访问文件网址）
 • 零网络请求，不收集任何数据
 
 隐私：本扩展不收集、不上传任何数据，不读取浏览历史与页面内容；剪贴板只在你的触发动作时
@@ -57,7 +58,7 @@ text into the focused field using trusted keyboard events (or a DOM fallback).
 
 Features: three trigger methods, two input engines (CDP trusted keystrokes with
 the optional debugger permission, or execCommand insertText with no extra
-permissions), caret protection, cancellable countdown, iframe support, and zero
+permissions), caret protection, cancellable countdown, iframe support, works on any http(s) page and local HTML files, and zero
 network requests. No data is collected or uploaded.
 ```
 
@@ -95,9 +96,9 @@ network requests. No data is collected or uploaded.
 
 > MV3 后台 Service Worker 没有 DOM，无法访问剪贴板；扩展按规范使用 offscreen document（reason: CLIPBOARD）完成剪贴板读取。
 
-### host_permissions: https://*.chaoxing.com/*
+### host_permissions: http(s)://*/*、file:///*
 
-> 仅在 *.chaoxing.com 域名下注入内容脚本，提供悬浮按钮与输入逻辑。
+> 内容脚本需要在任意网页上提供悬浮按钮与“把剪贴板文本写入光标处”的功能，因此需要覆盖所有 http(s) 网页与本地 HTML 文件（`file://` 还需用户在扩展详情中允许“访问文件网址”）。扩展只在用户主动触发时读取剪贴板并输入，没有任何网络请求。
 
 ### debugger（可选权限，默认不授予）
 
@@ -114,9 +115,9 @@ network requests. No data is collected or uploaded.
 
 ## 四、审核测试说明（给审核员）
 
-- 扩展只对 `https://*.chaoxing.com/*` 生效；
+- 扩展对所有 http(s) 网页与本地 HTML 文件生效，浏览器内部页面（`edge://`、扩展页等）除外；
 - 测试步骤：
-  1. 打开 `https://i.chaoxing.com/`（或任意超星页面）；
+  1. 打开任意网页（例如 `https://www.bing.com/`）；
   2. 点击页面右下角蓝色圆形按钮（若未显示，可在扩展弹窗中确认“页面悬浮按钮”为开）；
   3. 在页面中找到任意输入框（例如搜索框、弹窗表单），点击让光标出现；
   4. 再点击圆形按钮：3 秒倒计时后，剪贴板文本会被输入到光标处。
@@ -127,7 +128,7 @@ network requests. No data is collected or uploaded.
 
 商店要求至少一张截图（推荐 1280×800，PNG/JPG）：
 
-1. 超星页面 + 右下角悬浮按钮；2. 倒计时状态条；3. 弹窗界面；4. 设置页。
+1. 网页 + 右下角悬浮按钮；2. 倒计时状态条；3. 弹窗界面；4. 设置页。
 
 可另附：功能演示 GIF（≤ 10MB）。
 
@@ -137,7 +138,7 @@ network requests. No data is collected or uploaded.
 - [ ] `pwsh ./scripts/build.ps1` 构建通过（含 JS 语法检查与文件存在性校验）
 - [ ] ZIP 根目录存在 `manifest.json`
 - [ ] 在全新 Edge 配置中“加载解压缩的扩展”验证安装
-- [ ] 真实超星页面完成一次“悬浮按钮 / 弹窗 / 快捷键”三种触发验证
+- [ ] 在真实网站上完成一次“悬浮按钮 / 弹窗 / 快捷键”三种触发验证
 - [ ] `README.md`、`docs/PRIVACY.md` 链接有效
 - [ ] 权限说明文案已按上文填写
 - [ ] 截图 / 宣传图已准备

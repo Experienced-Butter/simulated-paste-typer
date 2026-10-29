@@ -35,7 +35,7 @@ const state = {
   offscreenCreated: 0,
   offscreenReads: 0,
   storage: { delayMs: 3000, mode: 'auto', intervalMs: 5, showFab: true },
-  tabUrl: 'https://i.chaoxing.com/work',
+  tabUrl: 'https://example.com/page',
   pingOk: true,
   debuggerGranted: false,
   clipboardText: '剪贴板内容 abc',
@@ -215,10 +215,10 @@ function lastTabMessage(cmd) {
   check('无候选时顶层显示提示', !!notice && notice.frameId === 0);
 
   // 5. 非受支持页面拦截
-  state.tabUrl = 'https://example.com/';
+  state.tabUrl = 'edge://settings/';
   res = await callBg({ cmd: 'spt:start', source: 'hotkey' });
   check('非受支持页面被拦截', !!res && res.ok === false && /不受支持/.test(res.error || ''), res);
-  state.tabUrl = 'https://i.chaoxing.com/work';
+  state.tabUrl = 'https://example.com/page';
 
   // 6. trusted-type：权限未授予 → fallback
   state.debuggerGranted = false;

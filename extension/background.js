@@ -41,8 +41,8 @@ const candidateBuckets = new Map();
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** 只处理 *.chaoxing.com 页面（内容脚本的匹配范围与之一致） */
-const SUPPORTED_URL = /^https:\/\/([^/]+\.)?chaoxing\.com\//i;
+/** 支持注入的页面：所有 http(s) 网页与本地文件页（file:// 需用户允许访问文件网址）；浏览器内部页面除外 */
+const SUPPORTED_URL = /^(https?|file):\/\//i;
 
 /* ==================================================================
  * 1. 基础 API 封装（统一用回调写法，兼容性最好）
@@ -90,13 +90,13 @@ function tabPing(tabId) {
   });
 }
 
-/** 检查标签页是否是受支持的页面（当前仅支持 *.chaoxing.com） */
+/** 检查标签页是否是受支持的页面（http(s)/file；浏览器内部页面除外） */
 async function checkTab(tabId) {
   try {
     const tab = await chrome.tabs.get(tabId);
     const url = (tab && tab.url) || '';
     if (!SUPPORTED_URL.test(url)) {
-      return { ok: false, error: '当前页面不受支持：本扩展仅支持 *.chaoxing.com 域名。' };
+      return { ok: false, error: '当前页面不受支持：浏览器内部页面（edge://、扩展页、开发者工具等）无法注入，请打开普通网页或本地 HTML 文件后重试。' };
     }
     return { ok: true, tab: tab };
   } catch (e) {
@@ -415,7 +415,7 @@ async function startInjection(source, tabId, explicitText) {
   if (!ping.ok) {
     return {
       ok: false,
-      error: '页面脚本还没就绪：请先刷新页面再试（仅支持 *.chaoxing.com 页面）。'
+      error: '页面脚本还没就绪：请刷新页面后重试；若是本地文件页，请在扩展详情中开启“允许访问文件网址”（浏览器内部页面无法注入）。'
     };
   }
 
