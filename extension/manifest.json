@@ -1,0 +1,64 @@
+{
+  "manifest_version": 3,
+  "name": "超星粘贴助手 · PasteTyper",
+  "short_name": "粘贴助手",
+  "version": "1.0.0",
+  "description": "在超星学习通等限制粘贴的页面，把剪贴板文本以模拟键盘输入的方式写入当前光标处。",
+  "minimum_chrome_version": "116",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "超星粘贴助手：读取剪贴板并模拟键盘输入",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "clipboardRead",
+    "storage",
+    "offscreen"
+  ],
+  "optional_permissions": [
+    "debugger"
+  ],
+  "host_permissions": [
+    "https://*.chaoxing.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.chaoxing.com/*"
+      ],
+      "js": [
+        "shared/config.js",
+        "content.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": true,
+      "match_about_blank": true
+    }
+  ],
+  "commands": {
+    "trigger-inject": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y",
+        "mac": "Command+Shift+Y"
+      },
+      "description": "读取剪贴板并注入到当前光标处"
+    }
+  }
+}

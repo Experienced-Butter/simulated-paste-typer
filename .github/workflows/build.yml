@@ -1,0 +1,48 @@
+name: build-extension
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Validate & package
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run behavior tests (jsdom + chrome stubs)
+        working-directory: tests
+        run: |
+          npm install --no-audit --no-fund
+          npm test
+
+      - name: Validate manifest & syntax, build ZIP
+        shell: pwsh
+        run: ./scripts/build.ps1
+
+      - name: Upload extension ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: chaoxing-paste-typer-zip
+          path: dist/*.zip
+          if-no-files-found: error
+
+      - name: Upload checksums
+        uses: actions/upload-artifact@v4
+        with:
+          name: chaoxing-paste-typer-sha256
+          path: dist/SHA256SUMS.txt
+          if-no-files-found: warn

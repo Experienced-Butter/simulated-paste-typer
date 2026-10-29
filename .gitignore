@@ -1,0 +1,19 @@
+# 构建产物（由 scripts/build.ps1 生成；发布时请用 GitHub Actions 或本地产物上传商店）
+dist/
+
+# 依赖与工具目录
+node_modules/
+.vscode/
+.idea/
+*.code-workspace
+
+# 系统 / 编辑器垃圾
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.log
+*.tmp
+*.swp
+
+# 本地测试脚本（可选）
+scratch/

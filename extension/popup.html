@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>超星粘贴助手</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="head">
+    <img class="logo" src="icons/icon48.png" alt="" width="34" height="34">
+    <div class="titles">
+      <h1>超星粘贴助手</h1>
+      <p class="sub">剪贴板文本 → 模拟键盘输入</p>
+    </div>
+    <span class="ver" id="versionLabel"></span>
+  </header>
+
+  <div class="status" id="statusRow">
+    <span class="dot" id="statusDot"></span>
+    <span id="statusText">正在检测当前页面…</span>
+  </div>
+
+  <section class="card">
+    <div class="field">
+      <label for="delaySelect">触发后等待</label>
+      <select id="delaySelect"></select>
+    </div>
+    <div class="field">
+      <label for="modeSelect">输入方式</label>
+      <select id="modeSelect"></select>
+    </div>
+    <div class="permLine">
+      <span id="permText">真实键盘模拟：检测中…</span>
+      <button class="mini" id="grantBtn" type="button" hidden>授权</button>
+    </div>
+  </section>
+
+  <button id="injectBtn" class="primary" type="button">读取剪贴板并输入到光标处</button>
+  <p class="hint">用法：先在目标输入框里点一下让光标出现，再点上面的按钮。</p>
+  <p class="feedback" id="feedback" hidden></p>
+
+  <section class="card clipCard">
+    <div class="clipHead">
+      <span>剪贴板预览</span>
+      <button class="mini" id="peekBtn" type="button">刷新</button>
+    </div>
+    <pre id="clipPreview" class="preview">（未读取）</pre>
+  </section>
+
+  <footer class="foot">
+    <label class="check">
+      <input type="checkbox" id="fabToggle">
+      <span>页面悬浮按钮</span>
+    </label>
+    <a href="#" id="optionsLink">设置与说明</a>
+  </footer>
+
+  <!-- 共享配置 → 弹窗逻辑（不允许内联脚本，符合 MV3 的 CSP） -->
+  <script src="shared/config.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
