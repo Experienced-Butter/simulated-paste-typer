@@ -101,13 +101,34 @@ Get-ChildItem -Path $extDir -Force | ForEach-Object {
 Write-Host ("[stage] 已复制扩展文件 → {0}" -f $stageDir.Substring($root.Length + 1))
 
 # ---------- 5. 生成 ZIP（zip 根目录 = manifest.json 所在目录） ----------
+# 注意：Windows 上的 ZipFile.CreateFromDirectory 会把子目录写成反斜杠（icons\icon16.png），
+# 这不符合 ZIP 规范，部分解压器 / 商店会认为路径无效。这里手工创建条目，强制使用正斜杠。
+Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-[System.IO.Compression.ZipFile]::CreateFromDirectory(
-    $stageDir,
-    $zipPath,
-    [System.IO.Compression.CompressionLevel]::Optimal,
-    $false   # includeBaseDirectory = false ← 商店上传要求的根目录结构
-)
+
+$stageFull = (Resolve-Path $stageDir).Path.TrimEnd('\', '/')
+$zipStream = [System.IO.File]::Create($zipPath)
+try {
+    $archive = New-Object System.IO.Compression.ZipArchive($zipStream, [System.IO.Compression.ZipArchiveMode]::Create)
+    try {
+        Get-ChildItem -Path $stageDir -Recurse -File | ForEach-Object {
+            $relative = $_.FullName.Substring($stageFull.Length).TrimStart('\', '/')
+            $entryName = $relative -replace '\\', '/'
+            $entry = $archive.CreateEntry($entryName, [System.IO.Compression.CompressionLevel]::Optimal)
+            $entryStream = $entry.Open()
+            try {
+                $source = [System.IO.File]::OpenRead($_.FullName)
+                try { $source.CopyTo($entryStream) } finally { $source.Dispose() }
+            } finally {
+                $entryStream.Dispose()
+            }
+        }
+    } finally {
+        $archive.Dispose()
+    }
+} finally {
+    $zipStream.Dispose()
+}
 
 # ---------- 6. 校验 ZIP ----------
 $archive = [System.IO.Compression.ZipFile]::OpenRead($zipPath)
@@ -115,6 +136,10 @@ try {
     $entries = $archive.Entries | ForEach-Object { $_.FullName }
     if ($entries -notcontains 'manifest.json') {
         throw '打包失败：zip 根目录没有 manifest.json'
+    }
+    $badPaths = $entries | Where-Object { $_ -match '\\' }
+    if ($badPaths) {
+        throw ('打包失败：zip 条目路径包含反斜杠（不符合 ZIP 规范）：' + ($badPaths -join ', '))
     }
     Write-Host ("[zip] {0}（{1} 个条目）" -f $zipPath.Substring($root.Length + 1), $entries.Count)
 } finally {
