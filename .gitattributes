@@ -1,0 +1,9 @@
+# 统一换行：仓库内一律 LF，避免 Windows / macOS / CI 之间出现无意义 diff
+* text=auto eol=lf
+*.png binary
+*.zip binary
+*.jpeg binary
+*.jpg binary
+
+# PowerShell 脚本在 Windows 上用 CRLF 更稳妥（含 BOM 的文件不受影响）
+*.ps1 text eol=crlf
