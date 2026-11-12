@@ -239,28 +239,6 @@ npm test
 - 后台日志：`edge://extensions` → 该扩展 → “Service Worker” → 检查视图；
 - 弹窗 / 设置页：右键扩展图标 → “审查弹出内容”，或直接打开 `options.html`。
 
-## 发布：GitHub / Edge 加载项商店
-
-### 上传到 GitHub（GitHub Desktop 直接“从本地添加”）
-
-本仓库已经是**初始化好的 git 仓库**（已有 `.git` 与首个提交），所以：
-
-1. 打开 GitHub Desktop → `File` → `Add local repository…`；
-2. 选择本目录 `simulated-paste-typer`，即可直接添加；
-3. 点 `Publish repository` 推到 GitHub（建议不要勾选 “Keep this code private”，或按需选择）。
-
-如果拿到的是不含 `.git` 的副本，也可以在 GitHub Desktop 里 `File → New repository` 指向该目录，或手动 `git init` 后再添加。
-
-### 提交到 Microsoft Edge 加载项商店
-
-1. 打开 [Edge 加载项开发人员中心](https://partner.microsoft.com/dashboard/microsoftedge/overview) 注册并创建新项目；
-2. 上传 `dist/simulated-paste-typer-v<版本>.zip`（根目录含 `manifest.json`）；
-3. 名称、简介、详细描述、截图、隐私政策等文案模板见 [`docs/STORE.md`](docs/STORE.md)；
-4. 注意：`debugger` 属于**可选高权限**，商店审核时需在“权限说明”里解释用途（模板已写好）；
-5. 审核通过后即可发布。
-
-> 隐私政策可以直接把 [`docs/PRIVACY.md`](docs/PRIVACY.md) 的内容托管到 GitHub Pages 后填写链接。
-
 ## 免责声明
 
 - 本项目仅用于**你自己有权输入的内容**；请遵守所在学校 / 单位与目标网站的规则；
