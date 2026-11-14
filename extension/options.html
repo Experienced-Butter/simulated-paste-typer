@@ -1,42 +1,42 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>模拟录入粘贴助手 · 设置</title>
+  <title>Simulated Paste Typer · Settings</title>
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
   <header class="head">
     <img class="logo" src="icons/icon128.png" alt="" width="52" height="52">
     <div class="titles">
-      <h1>模拟录入粘贴助手 · 设置</h1>
-      <p class="sub">把剪贴板文本以模拟键盘输入的方式写入当前光标处 · <span id="versionLabel"></span></p>
+      <h1 data-i18n="oTitle">模拟录入粘贴助手 · 设置</h1>
+      <p class="sub"><span data-i18n="oSub">把剪贴板文本以模拟键盘输入的方式写入当前光标处 ·</span> <span id="versionLabel"></span></p>
     </div>
-    <span class="saveState" id="saveState" hidden>已保存</span>
+    <span class="saveState" id="saveState" data-i18n="oSaved" hidden>已保存</span>
   </header>
 
   <main class="wrap">
     <!-- ============================ 基本设置 ============================ -->
     <section class="card">
-      <h2>基本设置</h2>
+      <h2 data-i18n="oSecBasic">基本设置</h2>
 
       <div class="row">
         <div class="rowMain">
-          <label for="delayInput">触发后等待时间</label>
-          <p class="desc">触发后先等待这么久，再开始输入，给你时间把光标放到目标输入框里。</p>
+          <label for="delayInput" data-i18n="oDelayLabel">触发后等待时间</label>
+          <p class="desc" data-i18n="oDelayDesc">触发后先等待这么久，再开始输入，给你时间把光标放到目标输入框里。</p>
         </div>
         <div class="rowSide">
           <input id="delayInput" type="number" min="1" max="60" step="1" inputmode="numeric">
-          <span class="unit">秒</span>
+          <span class="unit" data-i18n="oUnitSec">秒</span>
         </div>
       </div>
 
       <div class="row">
         <div class="rowMain">
-          <label for="modeSelect">输入方式</label>
+          <label for="modeSelect" data-i18n="oModeLabel">输入方式</label>
           <p class="desc">
-            <b>真实键盘模拟</b>：通过浏览器的受信任键盘事件逐字符输入，兼容性与仿真度最高（需要“调试”权限）。<br>
-            <b>兼容输入</b>：通过 DOM 插入文本，不需要额外权限，但个别富文本编辑器可能不响应。
+            <b data-i18n="oModeTrustedName">真实键盘模拟</b><span data-i18n="oModeTrustedDesc">：通过浏览器的受信任键盘事件逐字符输入，兼容性与仿真度最高（需要“调试”权限）。</span><br>
+            <b data-i18n="oModeCompatName">兼容输入</b><span data-i18n="oModeCompatDesc">：通过 DOM 插入文本，不需要额外权限，但个别富文本编辑器可能不响应。</span>
           </p>
         </div>
         <div class="rowSide">
@@ -46,19 +46,19 @@
 
       <div class="row">
         <div class="rowMain">
-          <label for="intervalInput">真实键盘输入的字符间隔</label>
-          <p class="desc">逐字符输入的间隔（毫秒）。0 表示尽可能快；数值越大越接近真人打字，长文本也会更慢。</p>
+          <label for="intervalInput" data-i18n="oIntervalLabel">真实键盘输入的字符间隔</label>
+          <p class="desc" data-i18n="oIntervalDesc">逐字符输入的间隔（毫秒）。0 表示尽可能快；数值越大越接近真人打字，长文本也会更慢。</p>
         </div>
         <div class="rowSide">
           <input id="intervalInput" type="number" min="0" max="200" step="1" inputmode="numeric">
-          <span class="unit">毫秒</span>
+          <span class="unit" data-i18n="oUnitMs">毫秒</span>
         </div>
       </div>
 
       <div class="row">
         <div class="rowMain">
-          <label for="fabToggle">在受支持的页面上显示悬浮按钮</label>
-          <p class="desc">右下角的圆形按钮，点一下即触发；拖动可以换位置。</p>
+          <label for="fabToggle" data-i18n="oFabLabel">在受支持的页面上显示悬浮按钮</label>
+          <p class="desc" data-i18n="oFabDesc">右下角的圆形按钮，点一下即触发；拖动可以换位置。</p>
         </div>
         <div class="rowSide">
           <label class="switch">
@@ -69,26 +69,24 @@
       </div>
 
       <div class="cardFoot">
-        <button class="ghost" id="resetBtn" type="button">恢复默认设置</button>
+        <button class="ghost" id="resetBtn" type="button" data-i18n="oResetBtn">恢复默认设置</button>
       </div>
     </section>
 
     <!-- ============================ 权限 ============================ -->
     <section class="card">
-      <h2>“真实键盘模拟”权限（可选）</h2>
-      <p class="desc">
-        真实键盘模拟使用浏览器的调试接口派发可信键盘事件。授权后：
-      </p>
+      <h2 data-i18n="oSecPerm">“真实键盘模拟”权限（可选）</h2>
+      <p class="desc" data-i18n="oPermDesc">真实键盘模拟使用浏览器的调试接口派发可信键盘事件。授权后：</p>
       <ul class="noteList">
-        <li>该页面顶部会出现一条“正在调试此浏览器”的黄色提示条，属正常现象，输入完成后会自动断开。</li>
-        <li>如果页面打开了开发者工具（F12），调试接口会被占用，请先关闭开发者工具。</li>
-        <li>不授权也能使用：输入方式选“自动”或“兼容输入”即可（不经过调试接口）。</li>
+        <li data-i18n="oPermNote1">该页面顶部会出现一条“正在调试此浏览器”的黄色提示条，属正常现象，输入完成后会自动断开。</li>
+        <li data-i18n="oPermNote2">如果页面打开了开发者工具（F12），调试接口会被占用，请先关闭开发者工具。</li>
+        <li data-i18n="oPermNote3">不授权也能使用：输入方式选“自动”或“兼容输入”即可（不经过调试接口）。</li>
       </ul>
       <div class="permRow">
-        <span id="permStatus" class="badge">检测中…</span>
+        <span id="permStatus" class="badge" data-i18n="oPermBadgeChecking">检测中…</span>
         <div class="permBtns">
-          <button class="primary small" id="grantBtn" type="button">授权调试权限</button>
-          <button class="ghost small" id="revokeBtn" type="button">移除授权</button>
+          <button class="primary small" id="grantBtn" type="button" data-i18n="oPermGrantBtn">授权调试权限</button>
+          <button class="ghost small" id="revokeBtn" type="button" data-i18n="oPermRevokeBtn">移除授权</button>
         </div>
       </div>
       <p id="permHint" class="desc" hidden></p>
@@ -96,34 +94,30 @@
 
     <!-- ============================ 使用说明 ============================ -->
     <section class="card">
-      <h2>三种触发方式</h2>
+      <h2 data-i18n="oSecUsage">三种触发方式</h2>
       <ol class="noteList">
-        <li><b>页面悬浮按钮</b>：在目标输入框里点一下让光标出现，再点右下角的圆形按钮。</li>
-        <li><b>工具栏弹窗</b>：点扩展图标 → “读取剪贴板并输入到光标处”。</li>
-        <li><b>快捷键</b>：默认 <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Y</kbd>，可在 <code>edge://extensions/shortcuts</code> 中修改。</li>
+        <li><b data-i18n="oUse1">页面悬浮按钮</b><span data-i18n="oUse1Desc">：在目标输入框里点一下让光标出现，再点右下角的圆形按钮。</span></li>
+        <li><b data-i18n="oUse2">工具栏弹窗</b><span data-i18n="oUse2Desc">：点扩展图标 → “读取剪贴板并输入到光标处”。</span></li>
+        <li><b data-i18n="oUse3">快捷键</b><span data-i18n="oUse3DescA">：默认</span> <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Y</kbd><span data-i18n="oUse3DescB">，可在</span> <code>edge://extensions/shortcuts</code> <span data-i18n="oUse3DescC">中修改。</span></li>
       </ol>
-      <p class="desc">
-        任意方式触发后，先等待“触发后等待时间”，随后文本会输入到当时的焦点位置。<br>
-        倒计时与输入过程中都可以按 <kbd>Esc</kbd> 取消。
-      </p>
+      <p class="desc" data-i18n="oUsageNote">任意方式触发后，先等待“触发后等待时间”，随后文本会输入到当时的焦点位置。倒计时与输入过程中都可以按 Esc 取消。</p>
     </section>
 
     <!-- ============================ 关于 ============================ -->
     <section class="card about">
-      <h2>关于与隐私</h2>
+      <h2 data-i18n="oSecAbout">关于与隐私</h2>
+      <p class="desc" data-i18n="oAbout1">本扩展不收集、不上传任何数据：所有逻辑都在本机运行，没有任何网络请求。剪贴板只在你的触发动作发生时读取一次，读完即用、不落盘；设置项保存在浏览器本地同步存储（chrome.storage.sync）。</p>
       <p class="desc">
-        本扩展不收集、不上传任何数据：所有逻辑都在本机运行，没有任何网络请求。
-        剪贴板只在你的触发动作发生时读取一次，读完即用、不落盘；设置项保存在浏览器本地同步存储（chrome.storage.sync）。
+        <span data-i18n="oAbout2">版本</span> <span id="aboutVersion"></span> ·
+        <span data-i18n="oAbout3">许可证</span> <span class="mono">MIT</span> ·
+        <span data-i18n="oAbout4">项目主页（GitHub）与隐私说明见仓库内的 README.md / docs/PRIVACY.md。</span>
       </p>
-      <p class="desc">
-        版本 <span id="aboutVersion"></span> · 许可证 <span class="mono">MIT</span> ·
-        项目主页（GitHub）与隐私说明见仓库内的 <span class="mono">README.md</span> / <span class="mono">docs/PRIVACY.md</span>。
-      </p>
-      <p class="desc muted">请遵守所在学校与平台的规则，仅用于输入你有权输入的内容。</p>
+      <p class="desc muted" data-i18n="oAboutNote">请遵守所在学校与平台的规则，仅用于输入你有权输入的内容。</p>
     </section>
   </main>
 
   <script src="shared/config.js"></script>
+  <script src="shared/i18n.js"></script>
   <script src="options.js"></script>
 </body>
 </html>

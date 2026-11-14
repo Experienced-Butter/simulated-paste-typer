@@ -9,6 +9,7 @@
 
 (function () {
   const CFG = window.SPT_CONFIG;
+  const T = (k, s) => (window.SPT_I18N ? window.SPT_I18N.t(k, s) : k);
   const $ = (id) => document.getElementById(id);
 
   let settings = null;
@@ -68,10 +69,10 @@
     const granted = await permissionsContains();
     if (granted) {
       badge.className = 'badge ok';
-      badge.textContent = '已授权（推荐）';
+      badge.textContent = T('oPermBadgeGranted');
     } else {
       badge.className = 'badge err';
-      badge.textContent = '未授权：将使用兼容输入';
+      badge.textContent = T('oPermBadgeNot');
     }
     $('grantBtn').disabled = granted;
     $('revokeBtn').disabled = !granted;
@@ -87,12 +88,12 @@
       });
       await refreshPermission();
       if (granted) {
-        showPermHint('已授权。之后“真实键盘模拟”模式会通过浏览器调试接口派发可信键盘事件；输入期间页面顶部会出现黄色调试提示条，输入结束自动消失。');
+        showPermHint(T('oPermHintGranted'));
       } else {
-        showPermHint('浏览器没有确认授权：请再点一次“授权调试权限”，并在弹出的确认框中点“允许”。若从不弹框，请确认扩展是通过 edge://extensions 的“加载解压缩的扩展”安装的，并尝试重启浏览器。');
+        showPermHint(T('oPermHintDenied'));
       }
     } catch (e) {
-      showPermHint('授权失败：' + ((e && e.message) || e));
+      showPermHint(T('oPermHintFail', { e: (e && e.message) || e }));
     }
   }
 
@@ -104,7 +105,7 @@
           resolve(Boolean(value));
         });
       });
-      showPermHint('已移除授权，“真实键盘模拟”将不可用（自动回退为兼容输入）。');
+      showPermHint(T('oPermHintRevoked'));
       await refreshPermission();
     } catch (e) { /* 忽略 */ }
   }
@@ -113,6 +114,8 @@
 
   async function init() {
     const manifest = chrome.runtime.getManifest();
+    document.title = T('oTitle');
+    if (window.SPT_I18N) window.SPT_I18N.apply(document);
     $('versionLabel').textContent = 'v' + manifest.version;
     $('aboutVersion').textContent = manifest.version;
 
@@ -121,7 +124,8 @@
     for (const mode of CFG.MODES) {
       const option = document.createElement('option');
       option.value = mode;
-      option.textContent = CFG.MODE_LABELS[mode] || mode;
+      const map = { auto: 'pModeAuto', trusted: 'pModeTrusted', dom: 'pModeDom' };
+      option.textContent = T(map[mode] || 'pModeAuto');
       modeSelect.appendChild(option);
     }
 

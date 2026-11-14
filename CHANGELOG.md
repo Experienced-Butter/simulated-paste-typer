@@ -2,6 +2,22 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.1.3] - 2025-01-01
+
+### 新增
+
+- 界面多语言：简体中文 / 繁体中文 / 英文，**自动跟随浏览器界面语言切换**。
+  - 浏览器语言为任何繁体中文（zh-TW / zh-HK / zh-MO / zh-Hant）→ 繁体中文
+  - 其它中文（zh-CN / zh-SG 等）→ 简体中文
+  - 非中文 → English
+- 弹窗、设置页、页面悬浮按钮、状态提示、倒计时与报错信息均已本地化。
+- 包内新增 `_locales/en`、`_locales/zh_TW`、`_locales/zh_HK`、`_locales/zh_MO`，商店识别为多语言扩展。
+- `default_locale` 改为 `en`（非中文环境默认英文）。
+
+### 说明
+
+- 功能、权限、快捷键与使用方式不变；版本号升级以便商店更新。
+
 ## [1.1.2] - 2025-01-01
 
 ### 变更
@@ -46,6 +62,8 @@
 - 零网络请求、无数据收集；
 - 打包脚本与图标生成脚本。
 
+[1.1.3]: https://github.com/your-username/simulated-paste-typer/releases/tag/v1.1.3
+[1.1.2]: https://github.com/your-username/simulated-paste-typer/releases/tag/v1.1.2
 [1.1.1]: https://github.com/your-username/simulated-paste-typer/releases/tag/v1.1.1
 [1.1.0]: https://github.com/your-username/simulated-paste-typer/releases/tag/v1.1.0
 [1.0.0]: https://github.com/your-username/simulated-paste-typer/releases/tag/v1.0.0

@@ -4,7 +4,7 @@
 
 ## 一、上传包
 
-- 使用 `dist/simulated-paste-typer-v<版本>.zip`；
+- 使用 `dist/simulated-paste-typer-v<版本>.zip`（当前版本 1.1.3，包内语言：en / zh_CN / zh_TW / zh_HK / zh_MO）；
 - ZIP **根目录**必须包含 `manifest.json`（构建脚本已保证）；
 - 建议同时上传/附带 `dist/SHA256SUMS.txt` 的 SHA256 值（可选）。
 
@@ -68,7 +68,7 @@ network requests. No data is collected or uploaded.
 
 ### 语言
 
-`中文（简体）`，可选补充 `English`
+包内提供 `en` / `zh_CN` / `zh_TW` / `zh_HK` / `zh_MO` 五种商店语言；建议至少添加 **English** 与 **中文（台灣）** 的商店一览，香港/澳门可复用台湾文案。各语言文案与更新步骤见 `docs/UPDATE-v1.1.3.md`。
 
 ### 隐私政策 URL
 

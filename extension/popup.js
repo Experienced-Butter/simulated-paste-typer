@@ -15,6 +15,7 @@
 
 (function () {
   const CFG = window.SPT_CONFIG;
+  const T = (k, s) => (window.SPT_I18N ? window.SPT_I18N.t(k, s) : k);
   const $ = (id) => document.getElementById(id);
 
   const SUPPORTED_URL = /^(https?|file):\/\//i;
@@ -34,7 +35,7 @@
       const timer = setTimeout(() => {
         if (settled) return;
         settled = true;
-        resolve({ ok: false, error: '与后台通信超时' });
+        resolve({ ok: false, error: T('bTimeout') });
       }, typeof timeoutMs === 'number' && timeoutMs > 0 ? timeoutMs : 20000);
       try {
         chrome.runtime.sendMessage(payload, (resp) => {
@@ -42,8 +43,8 @@
           settled = true;
           clearTimeout(timer);
           const lastError = chrome.runtime.lastError;
-          if (lastError) { resolve({ ok: false, error: lastError.message || '后台无响应' }); return; }
-          resolve(resp || { ok: false, error: '后台没有返回内容' });
+          if (lastError) { resolve({ ok: false, error: lastError.message || T('bNoResp') }); return; }
+          resolve(resp || { ok: false, error: T('bEmpty') });
         });
       } catch (e) {
         if (settled) return;
@@ -75,8 +76,13 @@
 
   function formatDelay(ms) {
     const value = Number(ms) || 0;
-    if (value % 1000 !== 0) return (value / 1000).toFixed(1) + ' 秒';
-    return (value / 1000) + ' 秒';
+    const n = value % 1000 !== 0 ? (value / 1000).toFixed(1) : String(value / 1000);
+    return T('pDelayValue', { n: n });
+  }
+
+  function modeLabel(mode) {
+    const map = { auto: 'pModeAuto', trusted: 'pModeTrusted', dom: 'pModeDom' };
+    return T(map[mode] || 'pModeAuto');
   }
 
   function setFeedback(text, kind) {
@@ -96,12 +102,12 @@
     const el = $('clipPreview');
     if (!el) return;
     if (!text) {
-      el.textContent = '（剪贴板为空，或内容不是文本：图片/文件暂不支持）';
+      el.textContent = T('pPreviewEmpty');
       return;
     }
     const flat = String(text);
     const preview = flat.length > PREVIEW_LIMIT ? flat.slice(0, PREVIEW_LIMIT) + ' …' : flat;
-    el.textContent = preview + '\n\n共 ' + flat.length + ' 个字符';
+    el.textContent = preview + T('pPreviewChars', { n: flat.length });
   }
 
   function setBusyState(value, label) {
@@ -109,13 +115,15 @@
     const btn = $('injectBtn');
     if (!btn) return;
     btn.disabled = busy || !supported || !contentReady;
-    btn.textContent = busy ? (label || '处理中…') : '读取剪贴板并输入到光标处';
+    btn.textContent = busy ? (label || T('pProcessing')) : T('pInject');
   }
 
   /* ---------------- 初始化 ---------------- */
 
   async function init() {
     const manifest = chrome.runtime.getManifest();
+    document.title = T('pTitle');
+    if (window.SPT_I18N) window.SPT_I18N.apply(document);
     $('versionLabel').textContent = 'v' + manifest.version;
 
     // 1) 当前标签页
@@ -148,13 +156,13 @@
     const statusText = $('statusText');
     if (!supported) {
       statusRow.classList.add('err');
-      statusText.textContent = '当前页面不受支持（浏览器内部页面无法注入）';
+      statusText.textContent = T('pStatusUnsupported');
     } else if (!contentReady) {
       statusRow.classList.add('err');
-      statusText.textContent = '页面脚本未运行：请刷新本页（F5）；若刚更新过扩展，请到 edge://extensions 点“重新加载”后再刷新页面。';
+      statusText.textContent = T('pStatusNotReady');
     } else {
       statusRow.classList.add('ok');
-      statusText.textContent = '已连接受支持的页面，可以开始';
+      statusText.textContent = T('pStatusReady');
     }
     setBusyState(false);
 
@@ -182,7 +190,7 @@
     for (const ms of presets) {
       const option = document.createElement('option');
       option.value = String(ms);
-      option.textContent = formatDelay(ms) + (CFG.DELAY_PRESETS.indexOf(ms) >= 0 ? '' : '（自定义）');
+      option.textContent = formatDelay(ms) + (CFG.DELAY_PRESETS.indexOf(ms) >= 0 ? '' : T('pCustom'));
       select.appendChild(option);
     }
     select.value = String(current);
@@ -194,7 +202,7 @@
     for (const mode of CFG.MODES) {
       const option = document.createElement('option');
       option.value = mode;
-      option.textContent = CFG.MODE_LABELS[mode] || mode;
+      option.textContent = modeLabel(mode);
       select.appendChild(option);
     }
     select.value = CFG.MODES.indexOf(current) >= 0 ? current : CFG.DEFAULTS.mode;
@@ -211,11 +219,11 @@
         });
       });
       permText.textContent = granted
-        ? '真实键盘模拟：已授权（推荐）'
-        : '真实键盘模拟：未授权，将使用兼容输入';
+        ? T('pPermGranted')
+        : T('pPermNotGranted');
       grantBtn.hidden = granted;
     } catch (e) {
-      permText.textContent = '真实键盘模拟：状态未知';
+      permText.textContent = T('pPermUnknown');
       grantBtn.hidden = false;
     }
   }
@@ -229,15 +237,15 @@
         });
       });
       if (granted) {
-        setFeedback('已授权“调试”权限：之后将使用真实键盘事件输入（页面会出现黄色调试提示条，属正常现象）。', 'ok');
+        setFeedback(T('pGrantOk'), 'ok');
       } else {
         // 弹窗里发起权限请求时，浏览器弹出确认框会让弹窗失焦/关闭，请求可能因此被取消。
         // 改为打开设置页（普通标签页）再授权，成功率更高。
         try { chrome.runtime.openOptionsPage(); } catch (e) { /* 忽略 */ }
-        setFeedback('未获得“调试”权限（弹窗在浏览器确认框出现时可能被关闭）。已打开设置页，请在那里点击“授权调试权限”并点“允许”。', 'err');
+        setFeedback(T('pGrantFail'), 'err');
       }
     } catch (e) {
-      setFeedback('授权失败：' + ((e && e.message) || e), 'err');
+      setFeedback(T('pGrantErr', { e: (e && e.message) || e }), 'err');
     }
     await refreshPermission();
   }
@@ -250,7 +258,7 @@
   async function peekClipboard(silent) {
     const preview = $('clipPreview');
     if (!preview) return;
-    preview.textContent = '正在读取剪贴板…';
+    preview.textContent = T('rReading');
 
     try {
       const local = await readClipboardLocal();
@@ -259,10 +267,10 @@
       const resp = await sendBg({ cmd: 'spt:peek' });
       if (resp && resp.ok) { setPreview(resp.text); return; }
       if (!silent) {
-        setPreview('（未读取）');
-        setFeedback('读取剪贴板失败：' + ((resp && resp.error) || (local && local.error) || '未知原因') + '。请点“刷新”重试。', 'err');
+        setPreview(T('pPreviewNotRead'));
+        setFeedback(T('pPreviewFail', { e: (resp && resp.error) || (local && local.error) || T('pUnknownReason') }), 'err');
       } else {
-        setPreview('（点击“刷新”读取剪贴板）');
+        setPreview(T('pPreviewClickRefresh'));
       }
     } catch (e) {
       if (!silent) setFeedback('读取剪贴板失败：' + ((e && e.message) || e), 'err');
@@ -274,15 +282,15 @@
   async function inject() {
     if (busy) return;
     if (!supported) {
-      setFeedback('当前页面不受支持，无法注入。请打开普通网页（http/https）或本地 HTML 文件（需允许访问文件网址）。', 'err');
+      setFeedback(T('pUnsupported'), 'err');
       return;
     }
     if (!contentReady) {
-      setFeedback('页面脚本还没就绪：请刷新本页（F5）后重试；若是本地文件页，请在扩展详情中允许“访问文件网址”。', 'err');
+      setFeedback(T('pNotReady'), 'err');
       return;
     }
     setFeedback('');
-    setBusyState(true, '正在读取剪贴板…');
+    setBusyState(true, T('rReading'));
 
     try {
       const payload = { cmd: 'spt:start', tabId: activeTab.id, source: 'popup' };
@@ -291,14 +299,10 @@
 
       const res = await sendBg(payload);
       if (!res || !res.ok) {
-        setFeedback((res && res.error) || '启动失败，请稍后重试。', 'err');
+        setFeedback((res && res.error) || T('rStartFail'), 'err');
         return;
       }
-      setFeedback(
-        '已开始：约 ' + formatDelay(res.delayMs) + ' 后输入 ' + res.charCount +
-        ' 个字符。请把光标放到目标输入框内，按 Esc 可取消。',
-        'ok'
-      );
+      setFeedback(T('pStarted', { delay: formatDelay(res.delayMs), n: res.charCount }), 'ok');
     } finally {
       setBusyState(false);
     }
@@ -312,12 +316,12 @@
     $('delaySelect').addEventListener('change', async (event) => {
       const delayMs = Number(event.target.value);
       await CFG.saveSettings({ delayMs: delayMs });
-      setFeedback('已保存：触发后等待 ' + formatDelay(delayMs) + '。', 'ok');
+      setFeedback(T('pSavedDelay', { delay: formatDelay(delayMs) }), 'ok');
     });
 
     $('modeSelect').addEventListener('change', async (event) => {
       await CFG.saveSettings({ mode: event.target.value });
-      setFeedback('已保存输入方式。', 'ok');
+      setFeedback(T('pSavedMode'), 'ok');
     });
 
     $('grantBtn').addEventListener('click', requestDebuggerPermission);
@@ -328,7 +332,7 @@
 
     $('fabToggle').addEventListener('change', async (event) => {
       await CFG.saveSettings({ showFab: Boolean(event.target.checked) });
-      setFeedback(event.target.checked ? '已显示页面悬浮按钮。' : '已隐藏页面悬浮按钮。', 'ok');
+      setFeedback(event.target.checked ? T('pFabOn') : T('pFabOff'), 'ok');
     });
 
     $('optionsLink').addEventListener('click', (event) => {
@@ -338,6 +342,6 @@
   }
 
   init().catch((err) => {
-    setFeedback('弹窗初始化失败：' + ((err && err.message) || err), 'err');
+    setFeedback(T('pInitFail', { e: (err && err.message) || err }), 'err');
   });
 })();

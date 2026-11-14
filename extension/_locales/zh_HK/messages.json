@@ -1,0 +1,8 @@
+{
+  "extensionName": {
+    "message": "模擬錄入貼上助手"
+  },
+  "extensionDescription": {
+    "message": "在限制貼上的網頁上，把剪貼簿文字以模擬鍵盤輸入的方式寫入目前游標處。"
+  }
+}

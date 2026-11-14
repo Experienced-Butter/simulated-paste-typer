@@ -12,6 +12,7 @@ const { JSDOM } = require('jsdom');
 const ROOT = path.join(__dirname, '..', 'extension');
 const configSrc = fs.readFileSync(path.join(ROOT, 'shared', 'config.js'), 'utf8');
 const contentSrc = fs.readFileSync(path.join(ROOT, 'content.js'), 'utf8');
+const i18nSrc = fs.readFileSync(path.join(ROOT, 'shared', 'i18n.js'), 'utf8');
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -78,7 +79,8 @@ window.chrome = {
     local: { get: (defaults, cb) => { setTimeout(() => { if (cb) cb(Object.assign({}, defaults || {})); }, 0); }, set: () => {} },
     onChanged: { addListener: () => {} }
   },
-  permissions: { contains: (q, cb) => cb(true), request: (q, cb) => cb(true) }
+  permissions: { contains: (q, cb) => cb(true), request: (q, cb) => cb(true) },
+  i18n: { getUILanguage: () => 'zh-CN' }
 };
 
 /* jsdom 没有 execCommand 实现：让它返回 false，从而走“原生 setter 插入”的兜底分支 */
@@ -90,6 +92,7 @@ doc.getElementById('ta').addEventListener('input', (e) => inputEvents.push(e.inp
 
 /* 加载共享配置 + 内容脚本 */
 window.eval(configSrc);
+window.eval(i18nSrc);
 window.eval(contentSrc);
 
 function bgMsg(msg, sender) {

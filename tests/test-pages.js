@@ -63,6 +63,7 @@ async function testPopup() {
     },
     storage: store.api,
     permissions: { contains: (q, cb) => setTimeout(() => cb(false), 0) },
+    i18n: { getUILanguage: () => 'zh-CN' },
     tabs: {
       query: () => Promise.resolve([{ id: 9, url: 'https://example.com/page' }]),
       // 弹窗初始化时会 ping 内容脚本，这里模拟“内容脚本已就绪”
@@ -84,6 +85,7 @@ async function testPopup() {
   });
 
   window.eval(fs.readFileSync(path.join(EXT, 'shared', 'config.js'), 'utf8'));
+  window.eval(fs.readFileSync(path.join(EXT, 'shared', 'i18n.js'), 'utf8'));
   window.eval(fs.readFileSync(path.join(EXT, 'popup.js'), 'utf8'));
   await sleep(120);
 
@@ -134,10 +136,12 @@ async function testOptions() {
       contains: (q, cb) => setTimeout(() => cb(false), 0),
       request: (q, cb) => { permissionCalls.push('request'); setTimeout(() => cb(true), 0); },
       remove: (q, cb) => { permissionCalls.push('remove'); setTimeout(() => cb(true), 0); }
-    }
+    },
+    i18n: { getUILanguage: () => 'zh-CN' }
   };
 
   window.eval(fs.readFileSync(path.join(EXT, 'shared', 'config.js'), 'utf8'));
+  window.eval(fs.readFileSync(path.join(EXT, 'shared', 'i18n.js'), 'utf8'));
   window.eval(fs.readFileSync(path.join(EXT, 'options.js'), 'utf8'));
   await sleep(120);
 

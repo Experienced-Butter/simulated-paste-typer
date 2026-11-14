@@ -1,0 +1,8 @@
+{
+  "extensionName": {
+    "message": "Simulated Paste Typer"
+  },
+  "extensionDescription": {
+    "message": "Types clipboard text at the caret with simulated keyboard input on pages that block pasting."
+  }
+}

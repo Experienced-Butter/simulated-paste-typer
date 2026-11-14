@@ -24,6 +24,7 @@
    * 0. 基础守卫与运行状态
    * ------------------------------------------------------------------ */
   const CFG = globalThis.SPT_CONFIG;
+  const T = (k, s) => (globalThis.SPT_I18N ? globalThis.SPT_I18N.t(k, s) : k);
   if (!CFG) return;                              // 共享配置未加载（理论上不会发生）
   if (globalThis.__SPT_CONTENT__) return;        // 防止重复注入
   globalThis.__SPT_CONTENT__ = true;
@@ -64,7 +65,7 @@
       const timer = setTimeout(() => {
         if (settled) return;
         settled = true;
-        resolve({ ok: false, error: '与后台通信超时' });
+        resolve({ ok: false, error: T('bTimeout') });
       }, typeof timeoutMs === 'number' && timeoutMs > 0 ? timeoutMs : 20000);
       try {
         chrome.runtime.sendMessage(payload, (resp) => {
@@ -72,8 +73,8 @@
           settled = true;
           clearTimeout(timer);
           const lastError = chrome.runtime.lastError;
-          if (lastError) { resolve({ ok: false, error: lastError.message || '后台无响应' }); return; }
-          resolve(resp || { ok: false, error: '后台没有返回内容' });
+          if (lastError) { resolve({ ok: false, error: lastError.message || T('bNoResp') }); return; }
+          resolve(resp || { ok: false, error: T('bEmpty') });
         });
       } catch (e) {
         if (settled) return;
@@ -368,8 +369,8 @@
     const fab = document.createElement('button');
     fab.type = 'button';
     fab.className = 'spt-fab';
-    fab.title = '模拟录入粘贴助手：点击后等待几秒，把剪贴板内容以键盘输入方式写入光标处（可拖动）';
-    fab.setAttribute('aria-label', '模拟录入粘贴助手');
+    fab.title = T('fabTitle');
+    fab.setAttribute('aria-label', T('appName'));
     fab.innerHTML = FAB_ICON_SVG;
     fab.hidden = true;
 
@@ -380,7 +381,7 @@
     overlayText.className = 'spt-text';
     const overlayBtn = document.createElement('button');
     overlayBtn.type = 'button';
-    overlayBtn.textContent = '取消 (Esc)';
+    overlayBtn.textContent = T('cdCancel');
     overlay.appendChild(overlayText);
     overlay.appendChild(overlayBtn);
 
@@ -530,7 +531,7 @@
     ui.overlayStartAt = Number(startAt) || Date.now();
     ui.overlayChars = Number(charCount) || 0;
     ui.overlay.hidden = false;
-    ui.overlayBtn.textContent = '取消 (Esc)';
+    ui.overlayBtn.textContent = T('cdCancel');
     updateCountdownText();
     if (ui.overlayTimer) clearInterval(ui.overlayTimer);
     ui.overlayTimer = setInterval(updateCountdownText, 100);
@@ -542,19 +543,18 @@
     const remain = Math.max(0, ui.overlayStartAt - Date.now());
     if (remain > 0) {
       const sec = Math.ceil(remain / 100) / 10; // 保留 1 位小数
-      ui.overlayText.textContent = '将在 ' + sec + ' 秒后输入 ' + ui.overlayChars +
-        ' 字，请把光标放到目标输入框';
+      ui.overlayText.textContent = T('cdWait', { sec: sec, n: ui.overlayChars });
     } else {
-      ui.overlayText.textContent = '正在输入 ' + ui.overlayChars + ' 字…';
-      ui.overlayBtn.textContent = '中止 (Esc)';
+      ui.overlayText.textContent = T('cdTyping', { n: ui.overlayChars });
+      ui.overlayBtn.textContent = T('cdAbort');
     }
   }
 
   /** 倒计时结束、开始输入时调用 */
   function showTypingPhase() {
     if (!isTopFrame() || !ui.overlayActive) return;
-    if (ui.overlayText) ui.overlayText.textContent = '正在输入 ' + ui.overlayChars + ' 字…';
-    if (ui.overlayBtn) ui.overlayBtn.textContent = '中止 (Esc)';
+    if (ui.overlayText) ui.overlayText.textContent = T('cdTyping', { n: ui.overlayChars });
+    if (ui.overlayBtn) ui.overlayBtn.textContent = T('cdAbort');
   }
 
   /** 更新输入进度（由后台转发的 CDP 进度驱动） */
@@ -562,7 +562,7 @@
     if (!isTopFrame() || !ui.overlayActive || !ui.overlayText) return;
     const d = Number(done) || 0;
     const t = Number(total) || ui.overlayChars || 0;
-    ui.overlayText.textContent = '正在输入 ' + d + '/' + t + '…';
+    ui.overlayText.textContent = T('cdProgress', { done: d, total: t });
   }
 
   function hideOverlay() {
@@ -673,7 +673,7 @@
   function beginRun(msg) {
     if (state.activeRun) {
       // 理论上不会发生（后台保证同一标签页只有一个任务），兜底释放占用
-      sendBg({ cmd: 'spt:result', ok: false, message: '上一次输入尚未结束', chars: 0, aborted: false });
+      sendBg({ cmd: 'spt:result', ok: false, message: T('rPrevRunning'), chars: 0, aborted: false });
       return;
     }
     if (isTopFrame()) buildUi();
@@ -682,7 +682,7 @@
     const startAt = Number(msg.startAt) || (Date.now() + (Number.isFinite(delay) ? delay : 0));
     const text = CFG.normalizeNewlines(msg.text || '');
     if (!text) {
-      sendBg({ cmd: 'spt:result', ok: false, message: '没有可输入的文本', chars: 0, aborted: false });
+      sendBg({ cmd: 'spt:result', ok: false, message: T('rNoText'), chars: 0, aborted: false });
       return;
     }
     const run = {
@@ -720,14 +720,14 @@
       if (mode === 'need-grant') {
         finish(run, {
           ok: false,
-          message: '未获得“调试”权限，无法使用真实键盘模拟。请到扩展设置页完成授权，或把输入方式改为“自动/兼容输入”。'
+          message: T('rNeedGrant')
         });
         return;
       }
       if (run.iframeOnly && mode !== 'trusted') {
         finish(run, {
           ok: false,
-          message: '目标输入框位于跨域框架内，兼容输入无法写入。请在设置中启用“真实键盘模拟”（会请求调试权限）。'
+          message: T('rIframe')
         });
         return;
       }
@@ -744,7 +744,7 @@
 
       const trustedCanType = mode === 'trusted' && (target !== null || frameFocus || run.iframeOnly);
       if (!trustedCanType && !target) {
-        finish(run, { ok: false, message: '光标已经不在输入框里，本次输入已取消。' });
+        finish(run, { ok: false, message: T('rNoFocus') });
         return;
       }
       if (run.cancelled) return;
@@ -769,7 +769,7 @@
         if (!res || !res.ok) {
           finish(run, {
             ok: false,
-            message: (res && res.error) || '真实键盘输入失败',
+            message: (res && res.error) || T('rTypingFailed'),
             chars: (res && res.chars) || 0,
             aborted: Boolean(res && res.aborted)
           });
@@ -777,7 +777,7 @@
         }
         finish(run, {
           ok: true,
-          message: '已输入 ' + (res.chars || run.text.length) + ' 个字符',
+          message: T('rTyped', { n: res.chars || run.text.length }),
           chars: res.chars || run.text.length
         });
         return;
@@ -785,13 +785,13 @@
 
       // DOM 兼容模式：只可能在本框架内执行
       if (!target) {
-        finish(run, { ok: false, message: '光标已经不在输入框里，本次输入已取消。' });
+        finish(run, { ok: false, message: T('rNoFocus') });
         return;
       }
       const chars = insertTextViaDOM(target, run.text);
-      finish(run, { ok: true, message: '已通过兼容模式输入 ' + chars + ' 个字符', chars: chars });
+      finish(run, { ok: true, message: T('rTypedCompat', { n: chars }), chars: chars });
     } catch (err) {
-      finish(run, { ok: false, message: '输入过程中出错：' + ((err && err.message) || err) });
+      finish(run, { ok: false, message: T('rInputError', { e: (err && err.message) || err }) });
     }
   }
 
@@ -850,7 +850,7 @@
     if (run.timer) { clearTimeout(run.timer); run.timer = null; }
     if (isTopFrame()) {
       hideOverlay();
-      toast('已取消本次输入', 'muted');
+      toast(T('rCancelled'), 'muted');
     }
     setBusyUi(false);
     if (reason !== 'remote') sendBg({ cmd: 'spt:abort', reason: reason || 'user' });
@@ -860,7 +860,7 @@
   function requestCancel() {
     if (state.activeRun) { cancelActiveRun('user'); return; }
     hideOverlay();
-    toast('已取消本次输入', 'muted');
+    toast(T('rCancelled'), 'muted');
     sendBg({ cmd: 'spt:abort', reason: 'user' });
   }
 
@@ -899,12 +899,12 @@
 
   async function activateFab() {
     if (state.activeRun) {
-      toast('上一次输入还没结束，请稍候或按 Esc 取消。', 'muted');
+      toast(T('rBusy'), 'muted');
       return;
     }
     if (!isTopFrame()) return;
     setBusyUi(true);
-    toast('正在读取剪贴板…');
+    toast(T('rReading'));
 
     const payload = { cmd: 'spt:start', source: 'fab' };
     try {
@@ -912,7 +912,7 @@
       if (local && local.ok) {
         if (!local.text) {
           setBusyUi(false);
-          toast('剪贴板里没有可输入的文本（图片或文件暂不支持）。', 'err');
+          toast(T('rClipEmpty'), 'err');
           return;
         }
         payload.text = local.text;
@@ -922,7 +922,7 @@
     const res = await sendBg(payload);
     if (!res || !res.ok) {
       setBusyUi(false);
-      toast((res && res.error) || '启动失败，请稍后重试。', 'err');
+      toast((res && res.error) || T('rStartFail'), 'err');
     }
     // 成功时：倒计时 UI 由本框架（如果本框架执行）或后台消息驱动
   }
@@ -997,7 +997,7 @@
         if (isTopFrame()) {
           const wasVisible = ui.overlayActive;
           hideOverlay();
-          if (wasVisible) toast('已取消本次输入', 'muted');
+          if (wasVisible) toast(T('rCancelled'), 'muted');
         }
         return false;
       default:

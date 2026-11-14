@@ -20,8 +20,10 @@
 'use strict';
 
 importScripts('shared/config.js');
+importScripts('shared/i18n.js');
 
 const CFG = self.SPT_CONFIG || globalThis.SPT_CONFIG;
+const T = (k, s) => { try { return self.SPT_I18N.t(k, s); } catch (e) { return k; } };
 
 /* ==================================================================
  * 0. 全局状态
@@ -96,11 +98,11 @@ async function checkTab(tabId) {
     const tab = await chrome.tabs.get(tabId);
     const url = (tab && tab.url) || '';
     if (!SUPPORTED_URL.test(url)) {
-      return { ok: false, error: '当前页面不受支持：浏览器内部页面（edge://、扩展页、开发者工具等）无法注入，请打开普通网页或本地 HTML 文件后重试。' };
+      return { ok: false, error: T('bErrUnsupported') };
     }
     return { ok: true, tab: tab };
   } catch (e) {
-    return { ok: false, error: '无法读取当前标签页信息。' };
+    return { ok: false, error: T('bErrTabInfo') };
   }
 }
 
@@ -161,8 +163,8 @@ function requestOffscreenClipboardOnce() {
     try {
       chrome.runtime.sendMessage({ target: 'spt-offscreen', cmd: 'read' }, (resp) => {
         const lastError = chrome.runtime.lastError;
-        if (lastError) resolve({ ok: false, error: lastError.message || 'offscreen 无响应' });
-        else resolve(resp || { ok: false, error: 'offscreen 返回为空' });
+        if (lastError) resolve({ ok: false, error: lastError.message || T('bOffscreenNoResp') });
+        else resolve(resp || { ok: false, error: T('bOffscreenEmpty') });
       });
     } catch (e) {
       resolve({ ok: false, error: String((e && e.message) || e) });
@@ -175,7 +177,7 @@ function requestOffscreenClipboardOnce() {
  * 刚创建离屏文档时，脚本可能还没挂上消息监听，所以失败时短暂等待后重试。
  */
 async function requestOffscreenClipboard() {
-  let last = { ok: false, error: 'offscreen 无响应' };
+  let last = { ok: false, error: T('bOffscreenNoResp') };
   for (let attempt = 0; attempt < 3; attempt++) {
     last = await requestOffscreenClipboardOnce();
     if (last && last.ok) return last;
@@ -188,10 +190,10 @@ async function requestOffscreenClipboard() {
 async function readClipboard() {
   const ready = await ensureOffscreenDocument();
   if (!ready) {
-    return { ok: false, error: '无法创建离屏文档（浏览器版本过低或接口不可用）' };
+    return { ok: false, error: T('bOffscreenFail') };
   }
   const resp = await requestOffscreenClipboard();
-  if (!resp || !resp.ok) return { ok: false, error: (resp && resp.error) || '读取剪贴板失败' };
+  if (!resp || !resp.ok) return { ok: false, error: (resp && resp.error) || T('bClipFail') };
   return { ok: true, text: CFG.normalizeNewlines(resp.text || '') };
 }
 
@@ -256,13 +258,13 @@ function pickBestCandidate(items) {
 function attachDebugger(tabId) {
   return new Promise((resolve, reject) => {
     if (!chrome.debugger || typeof chrome.debugger.attach !== 'function') {
-      reject(new Error('缺少“调试”权限：请在扩展设置页授权“真实键盘模拟”后再试。'));
+      reject(new Error(T('bDbgGuard')));
       return;
     }
     try {
       chrome.debugger.attach({ tabId: tabId }, '1.3', () => {
         const lastError = chrome.runtime.lastError;
-        if (lastError) reject(new Error(lastError.message || '附加调试会话失败'));
+        if (lastError) reject(new Error(lastError.message || T('bDbgAttachFail')));
         else resolve();
       });
     } catch (e) { reject(e); }
@@ -284,13 +286,13 @@ function detachDebugger(tabId) {
 function debuggerCommand(tabId, method, params) {
   return new Promise((resolve, reject) => {
     if (!chrome.debugger || typeof chrome.debugger.sendCommand !== 'function') {
-      reject(new Error('缺少“调试”权限：请在扩展设置页授权“真实键盘模拟”后再试。'));
+      reject(new Error(T('bDbgGuard')));
       return;
     }
     try {
       chrome.debugger.sendCommand({ tabId: tabId }, method, params, (result) => {
         const lastError = chrome.runtime.lastError;
-        if (lastError) reject(new Error(lastError.message || (method + ' 执行失败')));
+        if (lastError) reject(new Error(lastError.message || T('bDbgCmdFail', { m: method })));
         else resolve(result);
       });
     } catch (e) { reject(e); }
@@ -301,15 +303,15 @@ function debuggerCommand(tabId, method, params) {
 function debuggerErrorText(err) {
   const message = String((err && err.message) || err || '');
   if (/another debugger|already attached|attached to the tab|cannot attach/i.test(message)) {
-    return '无法连接调试会话：请先关闭该页面的开发者工具（F12），或等待上一次输入完成后再试。';
+    return T('bDbgNoConn');
   }
   if (/debugger permission|permission/i.test(message)) {
-    return '缺少“调试”权限：请在扩展设置页重新授权真实键盘模拟。';
+    return T('bDbgNoPerm');
   }
   if (/detach|disconnected|target closed|not attached/i.test(message)) {
-    return '调试会话已断开（可能点了黄色提示条上的“取消”或页面被关闭），本次输入中止。';
+    return T('bDbgDetached');
   }
-  return message || '真实键盘输入失败';
+  return message || T('rTypingFailed');
 }
 
 /** 输入单个字符（'char' 事件等价于键盘产生的字符输入，且 isTrusted = true） */
@@ -351,11 +353,11 @@ async function pressEnter(tabId) {
  */
 async function typeTrusted(tabId, text, intervalMs) {
   if (!(await hasPermission('debugger'))) {
-    return { ok: false, fallback: true, error: '未授予“调试”权限，无法使用真实键盘模拟' };
+    return { ok: false, fallback: true, error: T('bDbgNoPermShort') };
   }
   const key = String(tabId);
   if (typingSessions.has(key)) {
-    return { ok: false, error: '该标签页已有一个输入任务正在进行' };
+    return { ok: false, error: T('bBusySession') };
   }
 
   try {
@@ -373,7 +375,7 @@ async function typeTrusted(tabId, text, intervalMs) {
   try {
     for (let i = 0; i < text.length; i++) {
       if (session.abort) {
-        return { ok: false, aborted: true, chars: sent, error: '输入已取消' };
+        return { ok: false, aborted: true, chars: sent, error: T('bCancelled') };
       }
       const ch = text[i];
       if (ch === '\r') continue; // \r 统一由 \n 处理，避免 CRLF 出现多余空行
@@ -415,7 +417,7 @@ async function typeTrusted(tabId, text, intervalMs) {
  * @param {string} [explicitText] 调用方已读到的剪贴板文本（可选）
  */
 async function startInjection(source, tabId, explicitText) {
-  if (!tabId || tabId < 0) return { ok: false, error: '未找到目标标签页' };
+  if (!tabId || tabId < 0) return { ok: false, error: T('bErrNoTab') };
 
   const check = await checkTab(tabId);
   if (!check.ok) return check;
@@ -424,12 +426,12 @@ async function startInjection(source, tabId, explicitText) {
   if (!ping.ok) {
     return {
       ok: false,
-      error: '页面脚本还没就绪：请刷新页面后重试；若是本地文件页，请在扩展详情中开启“允许访问文件网址”（浏览器内部页面无法注入）。'
+      error: T('bErrNotReady')
     };
   }
 
   if (hasActiveClaim(tabId) || startingTabs.has(tabId)) {
-    return { ok: false, error: '已有一次输入正在进行，请等它结束或按 Esc 取消。' };
+    return { ok: false, error: T('bErrBusy') };
   }
   startingTabs.add(tabId);
   try {
@@ -441,11 +443,11 @@ async function startInjection(source, tabId, explicitText) {
       text = CFG.normalizeNewlines(explicitText);
     } else {
       const clip = await readClipboard();
-      if (!clip.ok) return { ok: false, error: '读取剪贴板失败：' + clip.error };
+      if (!clip.ok) return { ok: false, error: T('bErrClipFail', { e: clip.error }) };
       text = clip.text;
     }
     if (!text) {
-      return { ok: false, error: '剪贴板里没有可输入的文本（图片或文件暂不支持）。' };
+      return { ok: false, error: T('rClipEmpty') };
     }
 
     const delayMs = settings.delayMs;
@@ -459,9 +461,9 @@ async function startInjection(source, tabId, explicitText) {
     if (!chosen) {
       sendToFrame(tabId, 0, {
         cmd: 'spt:notice',
-        text: '没有找到可以输入的编辑框：请先在输入框里点一下，让光标出现，然后再触发。'
+        text: T('bNoticeNoTarget')
       });
-      return { ok: false, error: '没有找到可输入的编辑框：请先点击输入框放置光标。' };
+      return { ok: false, error: T('bErrNoTarget') };
     }
 
     const ttl = delayMs + 120000; // 占用至少保留到“倒计时 + 输入”结束
@@ -578,9 +580,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
     case 'spt:trusted-type':
       return call(async () => {
-        if (!tabId) return { ok: false, error: '缺少目标标签页' };
+        if (!tabId) return { ok: false, error: T('bErrNoTab2') };
         const text = CFG.normalizeNewlines(msg.text || '');
-        if (!text) return { ok: false, error: '没有可输入的文本' };
+        if (!text) return { ok: false, error: T('rNoText') };
         const intervalMs = CFG.clampInt(msg.intervalMs, 0, 200, 5);
         return typeTrusted(tabId, text, intervalMs);
       });

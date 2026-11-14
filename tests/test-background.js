@@ -12,6 +12,7 @@ const vm = require('vm');
 const EXT = path.join(__dirname, '..', 'extension');
 const configSrc = fs.readFileSync(path.join(EXT, 'shared', 'config.js'), 'utf8');
 const backgroundSrc = fs.readFileSync(path.join(EXT, 'background.js'), 'utf8');
+const i18nSrc = fs.readFileSync(path.join(EXT, 'shared', 'i18n.js'), 'utf8');
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -89,6 +90,7 @@ const chrome = {
   permissions: {
     contains: (query, cb) => setTimeout(() => cb(state.debuggerGranted), 0)
   },
+  i18n: { getUILanguage: () => 'zh-CN' },
   tabs: {
     get: (tabId) => Promise.resolve({ id: tabId, url: state.tabUrl }),
     sendMessage: tabSendMessage,
@@ -125,6 +127,7 @@ const context = vm.createContext(sandbox);
 sandbox.self = sandbox;
 vm.runInContext('var self = globalThis;', context);
 vm.runInContext(configSrc, context);
+vm.runInContext(i18nSrc, context);
 vm.runInContext(backgroundSrc, context);
 
 /* ---------------- 工具 ---------------- */

@@ -6,7 +6,7 @@
 
 > ℹ️ 支持所有 http(s) 网页与本地 HTML 文件（`file://`，需在扩展详情中允许“访问文件网址”）；`edge://`、扩展页、开发者工具等浏览器内部页面无法注入。
 
-![版本](https://img.shields.io/badge/version-1.1.1-blue)
+![版本](https://img.shields.io/badge/version-1.1.3-blue)
 ![平台](https://img.shields.io/badge/platform-Edge%20%2F%20Chromium-3b82f6)
 ![许可](https://img.shields.io/badge/license-MIT-green)
 
@@ -44,6 +44,7 @@
 ## 功能一览
 
 - 🖱️ **三种触发方式**：页面悬浮按钮 / 工具栏弹窗 / 快捷键（默认 `Ctrl+Shift+Y`）
+- 🌐 **界面多语言**：自动跟随浏览器界面语言 —— 简体中文 / 繁体中文（台/港/澳）/ English
 - ⏱️ **可配置等待时间**：触发后 1–60 秒才开始输入，从容放好光标
 - ⌨️ **两种输入引擎**
   - *真实键盘模拟*（推荐）：通过 CDP 派发**可信（isTrusted）** 的键盘事件，兼容性最高
@@ -258,6 +259,7 @@ npm test
 - Waits a configurable delay (1–60 s), then inserts the clipboard text at the caret;
 - Two input engines: *trusted keyboard simulation* (CDP via the optional `debugger` permission, real `isTrusted` key events) and *compatibility insert* (`execCommand('insertText')`, no extra permissions);
 - No network requests, no data collection. Clipboard is read only on your action and never stored.
+- The UI follows your browser language: English, Simplified Chinese, or Traditional Chinese (TW/HK/MO).
 
 Build: `pwsh ./scripts/build.ps1` → loads via `edge://extensions` → *Load unpacked* (`dist/simulated-paste-typer-v<version>/`), or upload `dist/simulated-paste-typer-v<version>.zip` to the Edge Add-ons store.
 
